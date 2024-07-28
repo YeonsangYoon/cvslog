@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: cvslog
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  profiles:
+    include: testdb
+
+
+logging:
+  level:
+    root: info

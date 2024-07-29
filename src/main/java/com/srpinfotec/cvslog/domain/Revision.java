@@ -39,6 +39,13 @@ public class Revision extends BaseTime{
         this.version = version;
     }
 
+    public Revision(RevisionType type, Commit commit, File file, Long version) {
+        this.type = type;
+        this.commit = commit;
+        this.file = file;
+        this.version = version;
+    }
+
     public void setCommit(Commit commit){
         if(this.commit != null && this.commit != commit) {
             throw new CustomException("Revision의 Commit은 변경 불가");

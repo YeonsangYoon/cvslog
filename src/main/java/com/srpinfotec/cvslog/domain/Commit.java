@@ -21,17 +21,28 @@ public class Commit extends BaseTime{
     @Column(name = "COMMIT_MSG")
     private String commitMsg;
 
-    @Column(name = "COMMIT_TIME")
+    @Column(name = "COMMIT_TIME", nullable = false)
     private LocalDateTime commitTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROJECT_ID")
+    @JoinColumn(name = "PROJECT_ID", nullable = false)
     private Project project;
 
     @OneToMany(mappedBy = "commit")
     private List<Revision> revisions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_ID")
+    @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
+
+
+    public Commit(LocalDateTime commitTime, Project project, User user) {
+        this.commitTime = commitTime;
+        this.project = project;
+        this.user = user;
+    }
+
+    public void setCommitMsg(String msg){
+        this.commitMsg = msg;
+    }
 }

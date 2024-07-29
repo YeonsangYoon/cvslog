@@ -21,16 +21,22 @@ public class File extends BaseTime{
     @Column(name = "FILE_ID")
     private Long id;
 
-    @Column(name = "FILE_NAME")
+    @Column(name = "FILE_NAME", nullable = false)
     private String name;
 
-    @Column(name = "FILE_PATH")
+    @Column(name = "FILE_PATH", nullable = false)
     private String path;
 
     @OneToMany(mappedBy = "file", fetch = FetchType.LAZY)
     private List<Revision> revisions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROJECT_ID")
+    @JoinColumn(name = "PROJECT_ID", nullable = false)
     private Project project;
+
+    public File(String name, String path, Project project) {
+        this.name = name;
+        this.path = path;
+        this.project = project;
+    }
 }

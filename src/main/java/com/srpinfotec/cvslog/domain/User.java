@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NaturalId;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -14,6 +15,7 @@ public class User extends BaseTime {
     @Column(name = "USER_ID")
     private Long id;
 
+    @NaturalId
     @Column(name = "USER_NAME", unique = true)
     private String name;
 

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NaturalId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,8 @@ public class Project extends BaseTime {
     @Column(name = "PROJECT_ID")
     private Long id;
 
-    @Column(name = "PROJECT_NAME")
+    @NaturalId
+    @Column(name = "PROJECT_NAME", unique = true)
     private String name;
 
     @Column(name = "PROJECT_PATH")

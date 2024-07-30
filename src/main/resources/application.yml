@@ -2,14 +2,12 @@ spring:
   application:
     name: cvslog
 
-  jackson:
-    property-naming-strategy: SNAKE_CASE
-
-  config:
-    import:
-      - classpath:/application-cvs.yml
-      - classpath:/application-testdb.yml
-
-logging:
-  level:
-    root: info
+  profiles:
+    active: local
+    group:
+      local:
+        - cvs
+        - testdb
+      prod:
+        - cvs
+        - proddb

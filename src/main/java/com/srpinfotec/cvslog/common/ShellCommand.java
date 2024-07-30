@@ -12,7 +12,7 @@ public class ShellCommand {
     private final Window window;
     private final Linux linux;
 
-    public ShellCommand(String recentHistory, Window window, Linux linux) {
+    public ShellCommand(Window window, Linux linux) {
         this.window = window;
         this.linux = linux;
 

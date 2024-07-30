@@ -16,7 +16,7 @@ public class User extends BaseTime {
     private Long id;
 
     @NaturalId
-    @Column(name = "USER_NAME", unique = true)
+    @Column(name = "USER_NAME", unique = true, nullable = false)
     private String name;
 
     public User(String name) {

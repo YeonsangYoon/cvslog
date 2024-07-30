@@ -53,7 +53,6 @@ public class CVSService {
         }
     }
 
-    // TODO Natrual id 조회로 수정(User, Project)
     @Transactional
     public void updateHistory(Iterable<String> logs) {
         List<RevisionLogEntry> newEntries = new ArrayList<>();
@@ -77,15 +76,11 @@ public class CVSService {
             String projectName = commitGroup.getKey().getProjectName();
             LocalDateTime commitDate = commitGroup.getKey().getDate();
 
-            User user = userRepository.findByName(username)
-                    .orElseGet(() -> {
-                        return userRepository.save(new User(username));
-                    });
+            User user = userRepository.findByNaturalId(username)
+                    .orElseGet(() -> userRepository.save(new User(username)));
 
-            Project project = projectRepository.findByName(projectName)
-                    .orElseGet(() -> {
-                        return projectRepository.save(new Project(projectName));
-                    });
+            Project project = projectRepository.findByNaturalId(projectName)
+                    .orElseGet(() -> projectRepository.save(new Project(projectName)));
 
 
             Commit commit = commitRepository.save(new Commit(commitDate, project, user));
@@ -97,7 +92,9 @@ public class CVSService {
                         reviLog.getType(),
                         commit,
                         fileRepository.findByLog(reviLog.getFilename(), reviLog.getFilepath(), project.getId())
-                                .orElseGet(() -> {return fileRepository.save(new com.srpinfotec.cvslog.domain.File(reviLog.getFilename(), reviLog.getFilepath(), project));}),
+                                .orElseGet(() -> fileRepository.save(
+                                        new com.srpinfotec.cvslog.domain.File(reviLog.getFilename(), reviLog.getFilepath(), project))
+                                ),
                         reviLog.getVersion());
 
                 revisionRepository.save(revision);

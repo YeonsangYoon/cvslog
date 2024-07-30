@@ -19,22 +19,14 @@ public class Project extends BaseTime {
     private Long id;
 
     @NaturalId
-    @Column(name = "PROJECT_NAME", unique = true)
+    @Column(name = "PROJECT_NAME", unique = true, nullable = false)
     private String name;
-
-    @Column(name = "PROJECT_PATH")
-    private String path;
 
     @OneToMany(mappedBy = "project")
     private List<Commit> commits = new ArrayList<>();
 
     @OneToMany(mappedBy = "project")
     private List<File> files = new ArrayList<>();
-
-    public Project(String name, String path) {
-        this.name = name;
-        this.path = path;
-    }
 
     public Project(String name) {
         this.name = name;

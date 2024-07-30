@@ -1,6 +1,7 @@
 package com.srpinfotec.cvslog.service;
 
-import com.srpinfotec.cvslog.common.CustomException;
+import com.srpinfotec.cvslog.common.ShellCommand;
+import com.srpinfotec.cvslog.common.ShellCommandExecutor;
 import com.srpinfotec.cvslog.domain.Commit;
 import com.srpinfotec.cvslog.domain.Project;
 import com.srpinfotec.cvslog.domain.Revision;
@@ -10,14 +11,9 @@ import com.srpinfotec.cvslog.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.repository.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,26 +31,18 @@ public class CVSService {
     private final CommitRepository commitRepository;
     private final FileRepository fileRepository;
 
+    private final ShellCommand shellCommand;
+
     @PostConstruct
     private void initTestLog(){
-        updateHistory(getTestLogs());
-    }
-
-    private List<String> getTestLogs(){
-        ClassPathResource commitLog = new ClassPathResource("commitLog.txt");
-
-        try{
-            File commitFile = commitLog.getFile();
-
-            return Files.readAllLines(Paths.get(commitFile.getPath()));
-
-        } catch (IOException e){
-            throw new CustomException("파일 읽기 실패");
-        }
+        updateHistory();
     }
 
     @Transactional
-    public void updateHistory(Iterable<String> logs) {
+    public void updateHistory() {
+        // read Cvs History
+        Iterable<String> logs = ShellCommandExecutor.execute(shellCommand.getRecentHistory());
+
         List<RevisionLogEntry> newEntries = new ArrayList<>();
 
         for (String log : logs) {

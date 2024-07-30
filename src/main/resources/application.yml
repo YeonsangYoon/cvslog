@@ -5,9 +5,10 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
-  profiles:
-    include: testdb
-
+  config:
+    import:
+      - classpath:/application-cvs.yml
+      - classpath:/application-testdb.yml
 
 logging:
   level:

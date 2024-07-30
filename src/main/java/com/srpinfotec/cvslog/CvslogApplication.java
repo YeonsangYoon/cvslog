@@ -1,5 +1,7 @@
 package com.srpinfotec.cvslog;
 
+import com.srpinfotec.cvslog.common.CVSProperties;
+import com.srpinfotec.cvslog.common.ShellCommand;
 import com.srpinfotec.cvslog.service.FileService;
 import com.srpinfotec.cvslog.service.ProjectService;
 import com.srpinfotec.cvslog.service.UserService;
@@ -8,24 +10,13 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing
-@RequiredArgsConstructor
+@EnableConfigurationProperties({CVSProperties.class, ShellCommand.class})
 public class CvslogApplication {
-    private final UserService userService;
-    private final ProjectService projectService;
-    private final FileService fileService;
-
-    @PostConstruct
-    public void initCVS(){
-        // 프로젝트
-
-        // 파일
-
-    }
-
     public static void main(String[] args) {
         SpringApplication.run(CvslogApplication.class, args);
     }

@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 )
 public class Revision extends BaseTime{
     @Id @GeneratedValue
+    @Column(name = "REVISION_ID")
     private Long id;
 
     @Enumerated(EnumType.STRING)

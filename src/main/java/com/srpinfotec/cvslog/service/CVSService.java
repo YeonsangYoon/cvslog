@@ -33,10 +33,10 @@ public class CVSService {
 
     private final ShellCommand shellCommand;
 
-    @PostConstruct
-    private void initTestLog(){
-        updateHistory();
-    }
+//    @PostConstruct
+//    private void initTestLog(){
+//        updateHistory();
+//    }
 
     @Transactional
     public void updateHistory() {

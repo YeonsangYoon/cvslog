@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
     }
 )
 public class Revision extends BaseTime{
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "REVISION_ID")
     private Long id;
 

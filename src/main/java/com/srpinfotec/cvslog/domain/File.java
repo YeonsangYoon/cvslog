@@ -17,7 +17,7 @@ import java.util.List;
         }
 )
 public class File extends BaseTime{
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "FILE_ID")
     private Long id;
 

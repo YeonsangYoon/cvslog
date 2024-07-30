@@ -11,7 +11,7 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 @Table(name = "CVS_USER")
 public class User extends BaseTime {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "USER_ID")
     private Long id;
 

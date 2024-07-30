@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "CVS_REPOSITORY")
 public class Project extends BaseTime {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "PROJECT_ID")
     private Long id;
 

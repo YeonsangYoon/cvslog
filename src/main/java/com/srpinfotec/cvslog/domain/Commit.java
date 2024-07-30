@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "CVS_COMMIT_HISTORY")
 public class Commit extends BaseTime{
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "COMMIT_ID")
     private Long id;
 

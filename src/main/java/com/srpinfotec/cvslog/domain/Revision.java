@@ -1,6 +1,6 @@
 package com.srpinfotec.cvslog.domain;
 
-import com.srpinfotec.cvslog.common.CustomException;
+import com.srpinfotec.cvslog.error.CustomException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

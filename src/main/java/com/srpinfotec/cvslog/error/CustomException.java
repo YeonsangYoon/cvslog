@@ -1,4 +1,4 @@
-package com.srpinfotec.cvslog.common;
+package com.srpinfotec.cvslog.error;
 
 public class CustomException extends RuntimeException{
     public CustomException() {

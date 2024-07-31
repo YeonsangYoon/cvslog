@@ -1,5 +1,8 @@
 package com.srpinfotec.cvslog.common;
 
+import com.srpinfotec.cvslog.error.CustomException;
+import com.srpinfotec.cvslog.error.ShellCommandException;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,7 +35,7 @@ public class ShellCommandExecutor {
 
             return readLines;
         } catch (IOException | InterruptedException e) {
-            throw new CustomException("Shell Command 실행 오류");
+            throw new ShellCommandException("Shell Command 실행 오류");
         }
     }
 }

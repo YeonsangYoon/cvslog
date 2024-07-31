@@ -1,6 +1,6 @@
 package com.srpinfotec.cvslog.dto;
 
-import com.srpinfotec.cvslog.common.CustomException;
+import com.srpinfotec.cvslog.error.CustomException;
 import com.srpinfotec.cvslog.domain.RevisionType;
 import lombok.Data;
 

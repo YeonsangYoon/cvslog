@@ -13,10 +13,13 @@ public class CvsCommandExecutor extends ShellCommandExecutor{
     private final CVSProperties cvsProperties;
 
     public List<String> executeHistoryCommand(){
+        String command;
         if(SystemUtil.currentOs() == OsType.WINDOW){
-            return execute("type", ".\\src\\main\\resources\\commitLog.txt");
+            command = "type .\\src\\main\\resources\\commitLog.txt";
         } else {
-            return execute("cvs", "-d", cvsProperties.getRoot(), "history -a -x AMR -D", LocalDate.now().minusDays(1).toString());
+            command = "cvs -d " + cvsProperties.getRoot() + " history -a x AMR -D " + LocalDate.now().minusDays(1);
         }
+
+        return execute(command);
     }
 }

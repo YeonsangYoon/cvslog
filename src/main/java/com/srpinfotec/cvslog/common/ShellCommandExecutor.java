@@ -17,7 +17,6 @@ public class ShellCommandExecutor {
 
     // TODO 프로세스 실행 Timeout 기능 추가
     public static List<String> execute(String... command){
-        String os = System.getProperty("os.name").toLowerCase();
         ProcessBuilder processBuilder = new ProcessBuilder();
 
         List<String> commandList = new ArrayList<>();

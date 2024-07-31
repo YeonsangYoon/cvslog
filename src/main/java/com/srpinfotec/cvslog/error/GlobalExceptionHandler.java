@@ -12,4 +12,9 @@ public class GlobalExceptionHandler {
     public void handleShellCommandError(ShellCommandException e){
         log.error("Shell Command Error [{}] : {}", e.getCommand(), e.getMessage());
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public void allException(RuntimeException e){
+        log.error(e.getMessage());
+    }
 }

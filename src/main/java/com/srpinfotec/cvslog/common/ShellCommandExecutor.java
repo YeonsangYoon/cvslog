@@ -17,23 +17,23 @@ public class ShellCommandExecutor {
 
     // TODO 프로세스 실행 Timeout 기능 추가
     public static List<String> execute(String... command){
-        ProcessBuilder processBuilder = new ProcessBuilder();
-
-        List<String> commandList = new ArrayList<>();
-
-        if (SystemUtil.currentOs() == OsType.WINDOW) {
-            commandList.add("powershell.exe");
-            commandList.add("-Command");
-        } else {
-            commandList.add("bash");
-            commandList.add("-c");
-        }
-
-        commandList.addAll(Arrays.asList(command));
-
-        processBuilder.command(commandList);
-
         try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+
+            List<String> commandList = new ArrayList<>();
+
+            if (SystemUtil.currentOs() == OsType.WINDOW) {
+                commandList.add("powershell.exe");
+                commandList.add("-Command");
+            } else {
+                commandList.add("bash");
+                commandList.add("-c");
+            }
+
+            commandList.addAll(Arrays.asList(command));
+
+            processBuilder.command(commandList);
+
             List<String> readLines = new ArrayList<>();
 
             Process process = processBuilder.start();
@@ -47,9 +47,8 @@ public class ShellCommandExecutor {
 
             return readLines;
         } catch (IOException | InterruptedException e) {
-            String cmd = String.join(" ", commandList);
-
-            throw new ShellCommandException("Shell Command 실행 오류");
+            String cmd = String.join(" ", Arrays.stream(command).toList());
+            throw new ShellCommandException("Shell Command 실행 오류", cmd);
         }
     }
 }

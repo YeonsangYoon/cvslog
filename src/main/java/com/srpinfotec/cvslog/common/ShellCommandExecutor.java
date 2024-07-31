@@ -45,6 +45,8 @@ public class ShellCommandExecutor {
 
             return readLines;
         } catch (IOException | InterruptedException e) {
+            String cmd = String.join(" ", commandList);
+
             throw new ShellCommandException("Shell Command 실행 오류");
         }
     }

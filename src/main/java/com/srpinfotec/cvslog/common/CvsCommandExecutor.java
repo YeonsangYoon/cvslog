@@ -16,7 +16,7 @@ public class CvsCommandExecutor extends ShellCommandExecutor{
         if(SystemUtil.currentOs() == OsType.WINDOW){
             return execute("type", ".\\src\\main\\resources\\commitLog.txt");
         } else {
-            return execute("cvs", "-d", cvsProperties.getRoot(), "-a -x AMR -D", LocalDate.now().minusDays(1).toString());
+            return execute("cvs", "-d", cvsProperties.getRoot(), "history -a -x AMR -D", LocalDate.now().minusDays(1).toString());
         }
     }
 }

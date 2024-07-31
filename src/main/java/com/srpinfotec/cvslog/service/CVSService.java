@@ -1,7 +1,6 @@
 package com.srpinfotec.cvslog.service;
 
 import com.srpinfotec.cvslog.common.CvsCommandExecutor;
-import com.srpinfotec.cvslog.common.ShellCommandExecutor;
 import com.srpinfotec.cvslog.domain.Commit;
 import com.srpinfotec.cvslog.domain.Project;
 import com.srpinfotec.cvslog.domain.Revision;

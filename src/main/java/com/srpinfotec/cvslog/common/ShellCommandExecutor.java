@@ -33,22 +33,27 @@ public class ShellCommandExecutor {
             commandList.addAll(Arrays.asList(command));
 
             processBuilder.command(commandList);
+            processBuilder.redirectErrorStream(true);
 
             List<String> readLines = new ArrayList<>();
 
             Process process = processBuilder.start();
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
                 readLines.add(line);
                 log.debug(line);
             }
-            process.waitFor();
+
+            int exitCode = process.waitFor();
+            if(exitCode != 0){
+                throw new ShellCommandException("Shell Command 실행 오류", String.join(" ", Arrays.stream(command).toList()));
+            }
 
             return readLines;
         } catch (IOException | InterruptedException e) {
-            String cmd = String.join(" ", Arrays.stream(command).toList());
-            throw new ShellCommandException("Shell Command 실행 오류", cmd);
+            throw new ShellCommandException("Shell Command IO 예외", String.join(" ", Arrays.stream(command).toList()));
         }
     }
 }

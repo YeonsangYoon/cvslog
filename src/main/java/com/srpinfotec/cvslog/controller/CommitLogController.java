@@ -12,6 +12,6 @@ public class CommitLogController {
 
     @GetMapping("/commit/recent")
     public void recentCommit(){
-        cvsService.updateHistory();
+        cvsService.fetchCvsHistory();
     }
 }

@@ -1,6 +1,6 @@
 package com.srpinfotec.cvslog.service;
 
-import com.srpinfotec.cvslog.common.ShellCommand;
+import com.srpinfotec.cvslog.common.CvsCommandExecutor;
 import com.srpinfotec.cvslog.common.ShellCommandExecutor;
 import com.srpinfotec.cvslog.domain.Commit;
 import com.srpinfotec.cvslog.domain.Project;
@@ -9,7 +9,6 @@ import com.srpinfotec.cvslog.domain.User;
 import com.srpinfotec.cvslog.dto.LogEntryGroup;
 import com.srpinfotec.cvslog.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.repository.*;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +30,17 @@ public class CVSService {
     private final CommitRepository commitRepository;
     private final FileRepository fileRepository;
 
-    private final ShellCommand shellCommand;
+    private final CvsCommandExecutor cvsCommandExecutor;
 
 //    @PostConstruct
 //    private void initTestLog(){
-//        updateHistory();
+//        fetchCvsHistory();
 //    }
 
     @Transactional
-    public void updateHistory() {
+    public void fetchCvsHistory() {
         // read Cvs History
-        Iterable<String> logs = ShellCommandExecutor.execute(shellCommand.getRecentHistory());
+        Iterable<String> logs = cvsCommandExecutor.executeHistoryCommand();
 
         List<RevisionLogEntry> newEntries = new ArrayList<>();
 

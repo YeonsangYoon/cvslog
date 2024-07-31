@@ -1,8 +1,3 @@
 cvs:
   root: ${CVSROOT}
   workdir: ${CVSWORKDIR}
-  command:
-    window:
-      recent_history: type .\src\main\resources\commitLog.txt
-    linux:
-      recent_history: cvs history -a -x AMR -D

@@ -2,25 +2,35 @@ package com.srpinfotec.cvslog.common;
 
 import com.srpinfotec.cvslog.error.CustomException;
 import com.srpinfotec.cvslog.error.ShellCommandException;
+import com.srpinfotec.cvslog.util.SystemUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ShellCommandExecutor {
 
     // TODO 프로세스 실행 Timeout 기능 추가
-    public static List<String> execute(String command){
+    public static List<String> execute(String... command){
         String os = System.getProperty("os.name").toLowerCase();
         ProcessBuilder processBuilder = new ProcessBuilder();
 
-        if (os.contains("win")) {
-            processBuilder.command("powershell.exe", "-Command", command);
+        List<String> commandList = new ArrayList<>();
+
+        if (SystemUtil.currentOs() == OsType.WINDOW) {
+            commandList.add("powershell.exe");
+            commandList.add("-Command");
         } else {
-            processBuilder.command("bash", "-c", command);
+            commandList.add("bash");
+            commandList.add("-c");
         }
+
+        commandList.addAll(Arrays.asList(command));
+
+        processBuilder.command(commandList);
 
         try {
             List<String> readLines = new ArrayList<>();

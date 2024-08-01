@@ -1,6 +1,5 @@
 package com.srpinfotec.cvslog.common;
 
-import com.srpinfotec.cvslog.error.CustomException;
 import com.srpinfotec.cvslog.error.ShellCommandException;
 import com.srpinfotec.cvslog.util.SystemUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j

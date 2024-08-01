@@ -1,7 +1,7 @@
 package com.srpinfotec.cvslog.service;
 
-import com.srpinfotec.cvslog.error.CustomException;
 import com.srpinfotec.cvslog.domain.User;
+import com.srpinfotec.cvslog.error.CustomException;
 import com.srpinfotec.cvslog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

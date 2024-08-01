@@ -1,7 +1,7 @@
 package com.srpinfotec.cvslog.dto;
 
-import com.srpinfotec.cvslog.error.CustomException;
 import com.srpinfotec.cvslog.domain.RevisionType;
+import com.srpinfotec.cvslog.error.CustomException;
 import lombok.Data;
 
 import java.time.LocalDateTime;

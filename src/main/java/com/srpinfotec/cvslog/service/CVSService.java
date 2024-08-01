@@ -7,6 +7,7 @@ import com.srpinfotec.cvslog.domain.Revision;
 import com.srpinfotec.cvslog.domain.User;
 import com.srpinfotec.cvslog.dto.LogEntryGroup;
 import com.srpinfotec.cvslog.dto.RevisionLogEntry;
+import com.srpinfotec.cvslog.dto.response.FetchRsDto;
 import com.srpinfotec.cvslog.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,13 +32,8 @@ public class CVSService {
 
     private final CvsCommandExecutor cvsCommandExecutor;
 
-//    @PostConstruct
-//    private void initTestLog(){
-//        fetchCvsHistory();
-//    }
-
     @Transactional
-    public void fetchCvsHistory() {
+    public FetchRsDto fetchCvsHistory() {
         // read Cvs History
         Iterable<String> logs = cvsCommandExecutor.executeHistoryCommand();
 
@@ -86,5 +82,7 @@ public class CVSService {
                 revisionRepository.save(revision);
             }
         }
+
+        return new FetchRsDto(commitMap.size(), newEntries.size());
     }
 }

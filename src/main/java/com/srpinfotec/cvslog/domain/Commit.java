@@ -1,5 +1,6 @@
 package com.srpinfotec.cvslog.domain;
 
+import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -44,5 +45,16 @@ public class Commit extends BaseTime{
 
     public void setCommitMsg(String msg){
         this.commitMsg = msg;
+    }
+
+    public CommitRsDto toRsDto(){
+        return new CommitRsDto(
+                this.commitMsg,
+                this.getProject().getName(),
+                this.getUser().getName(),
+                this.getCommitTime(),
+                (long) this.getRevisions().size(),
+                this.getRevisions().stream().map(Revision::toRsDto).toList()
+        );
     }
 }

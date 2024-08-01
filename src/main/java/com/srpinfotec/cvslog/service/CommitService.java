@@ -14,6 +14,10 @@ public class CommitService {
     private final CommitRepository commitRepository;
 
     public List<CommitRsDto> getCommitList(CommitRqCond cond){
-        return commitRepository.findCommitDto(cond);
+        if(cond.getPage() == null){
+            cond.setPage(1L);
+        }
+
+        return commitRepository.findCommmitDtoByPage(cond);
     }
 }

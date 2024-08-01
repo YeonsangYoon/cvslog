@@ -13,6 +13,9 @@ import com.srpinfotec.cvslog.dto.response.RevisionRsDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -30,6 +33,8 @@ import static org.springframework.util.StringUtils.hasLength;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CommitRepositoryImpl implements CommitCustomRepository{
+    private static final Long COMMIT_LIMIT = 100L;   //한 페이지당 commit 최대 개수
+
     private final EntityManager em;
     private final EntityManagerFactory emf;
     private final JPAQueryFactory queryFactory;
@@ -54,41 +59,30 @@ public class CommitRepositoryImpl implements CommitCustomRepository{
 
     @Override
     public List<CommitRsDto> findCommitDto(CommitRqCond cond){
-        List<Revision> revisions = queryFactory
-                .selectFrom(revision)
-                .innerJoin(revision.commit, commit).fetchJoin()
-                .innerJoin(commit.project, project).fetchJoin()
+        List<Commit> commits = queryFactory
+                .selectFrom(commit)
                 .innerJoin(commit.user, user).fetchJoin()
-                .innerJoin(revision.file, file).fetchJoin()
+                .innerJoin(commit.project, project).fetchJoin()
                 .where(commitSearchCondition(cond))
+                .orderBy(commit.commitTime.desc())
                 .fetch();
 
-        return groupingRevisionEntityToCommitDto(revisions);
+        return commits.stream().map(Commit::toRsDto).toList();
     }
 
-    private List<CommitRsDto> groupingRevisionEntityToCommitDto(List<Revision> revisions){
-        List<CommitRsDto> retDto = new ArrayList<>();
+    @Override
+    public List<CommitRsDto> findCommmitDtoByPage(CommitRqCond cond) {
+        List<Commit> commits = queryFactory
+                .selectFrom(commit)
+                .innerJoin(commit.user, user).fetchJoin()
+                .innerJoin(commit.project, project).fetchJoin()
+                .where(commitSearchCondition(cond))
+                .orderBy(commit.commitTime.desc())
+                .offset((cond.getPage() - 1) * COMMIT_LIMIT)
+                .limit(COMMIT_LIMIT)
+                .fetch();
 
-        Map<Commit, List<Revision>> reviMap = revisions.stream()
-                .collect(Collectors.groupingBy(Revision::getCommit));
-
-        reviMap.forEach((c, revisionList) -> {
-            List<RevisionRsDto> revisionRsDtos = revisionList.stream()
-                    .map(r -> new RevisionRsDto(r.getType(), r.getVersion(), r.getFile().getName(), r.getFile().getPath()))
-                    .toList();
-
-            CommitRsDto commitRsDto = new CommitRsDto(
-                    c.getCommitMsg(),
-                    c.getProject().getName(),
-                    c.getUser().getName(),
-                    c.getCommitTime(),
-                    (long) revisionList.size(),
-                    revisionRsDtos);
-
-            retDto.add(commitRsDto);
-        });
-
-        return retDto;
+        return commits.stream().map(Commit::toRsDto).toList();
     }
 
     /******************************************************************************************

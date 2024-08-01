@@ -10,4 +10,6 @@ public interface CommitCustomRepository {
     List<CommitRsDto> findCommitDtoWithoutRevision();
 
     List<CommitRsDto> findCommitDto(CommitRqCond cond);
+
+    List<CommitRsDto> findCommmitDtoByPage(CommitRqCond cond);
 }

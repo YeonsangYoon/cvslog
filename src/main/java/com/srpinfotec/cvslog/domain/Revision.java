@@ -1,5 +1,6 @@
 package com.srpinfotec.cvslog.domain;
 
+import com.srpinfotec.cvslog.dto.response.RevisionRsDto;
 import com.srpinfotec.cvslog.error.CustomException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -56,5 +57,9 @@ public class Revision extends BaseTime{
 
         this.commit = commit;
         this.commit.getRevisions().add(this);
+    }
+
+    public RevisionRsDto toRsDto(){
+        return new RevisionRsDto(this.getType(), this.getVersion(), this.getFile().getName(), this.getFile().getPath());
     }
 }

@@ -27,5 +27,9 @@ public class CvsCommandExecutor extends ShellCommandExecutor{
         return executeHistoryCommand(1);
     }
 
+    public List<String> executeReadLogFile(String path){
+        String command = "cat " + path;
 
+        return execute(command);
+    }
 }

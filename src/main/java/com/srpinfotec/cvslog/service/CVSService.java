@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Transactional(readOnly = true)
 @Service
@@ -32,11 +33,19 @@ public class CVSService {
 
     private final CvsCommandExecutor cvsCommandExecutor;
 
-    @Transactional
     public FetchRsDto fetchCvsHistory() {
         // read Cvs History
         Iterable<String> logs = cvsCommandExecutor.executeHistoryCommand();
+        return saveLog(logs);
+    }
 
+    public FetchRsDto readHistoryFile(String filepath){
+        Iterable<String> logs = cvsCommandExecutor.executeReadLogFile(filepath);
+        return saveLog(logs);
+    }
+
+    @Transactional
+    public FetchRsDto saveLog(Iterable<String> logs){
         List<RevisionLogEntry> newEntries = new ArrayList<>();
 
         for (String log : logs) {
@@ -49,8 +58,8 @@ public class CVSService {
             }
         }
 
-        Map<LogEntryGroup, List<RevisionLogEntry>> commitMap = newEntries.stream().collect(Collectors.groupingBy(e ->
-                new LogEntryGroup(e.getDate(), e.getProjectName(), e.getUsername())));
+        Map<LogEntryGroup, List<RevisionLogEntry>> commitMap =
+                newEntries.stream().collect(groupingBy(e -> new LogEntryGroup(e.getDate(), e.getProjectName(), e.getUsername())));
 
         // 커밋 단위 저장
         for(Map.Entry<LogEntryGroup, List<RevisionLogEntry>> commitGroup : commitMap.entrySet()){

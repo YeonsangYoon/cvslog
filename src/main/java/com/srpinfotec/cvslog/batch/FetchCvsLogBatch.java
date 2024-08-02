@@ -43,11 +43,13 @@ public class FetchCvsLogBatch {
     @Bean
     public Job FetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
                               Tasklet bashCommandTasklet,
-                              Step revisionLogToEntityStep
+                              Step revisionLogToEntityStep,
+                              Step GroupingLogStep
                               ){
         return new JobBuilder("FetchCvsLogJob", jr)
                 .incrementer(new RunIdIncrementer())
                 .start(revisionLogToEntityStep)
+                .next(GroupingLogStep)
                 .build();
     }
 

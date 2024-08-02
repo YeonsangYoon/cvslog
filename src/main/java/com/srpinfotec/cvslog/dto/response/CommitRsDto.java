@@ -1,5 +1,6 @@
 package com.srpinfotec.cvslog.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Data;
@@ -9,11 +10,14 @@ import java.util.List;
 
 @Data
 public class CommitRsDto {
+    private String commitId;
     private String commitMsg;
     private String projectName;
     private String userName;
-    private LocalDateTime commitTime;
     private Long revisionCount;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
+    private LocalDateTime commitTime;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<RevisionRsDto> revisions;
@@ -27,7 +31,8 @@ public class CommitRsDto {
         this.revisionCount = revisionCount;
     }
 
-    public CommitRsDto(String commitMsg, String projectName, String userName, LocalDateTime commitTime, Long revisionCount, List<RevisionRsDto> revisions) {
+    public CommitRsDto(String commitId, String commitMsg, String projectName, String userName, LocalDateTime commitTime, Long revisionCount, List<RevisionRsDto> revisions) {
+        this.commitId = commitId;
         this.commitMsg = commitMsg;
         this.projectName = projectName;
         this.userName = userName;

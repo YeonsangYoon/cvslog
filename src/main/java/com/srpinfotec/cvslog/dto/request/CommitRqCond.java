@@ -1,7 +1,6 @@
 package com.srpinfotec.cvslog.dto.request;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
  * Commit 목록 조회 검색 조건

@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,11 +50,16 @@ public class Commit extends BaseTime{
     }
 
     public CommitRsDto toRsDto(){
+        // 시간대 변환 (UTC -> Asia / Seoul)
+        ZonedDateTime utcTime = this.getCommitTime().atZone(ZoneId.of("UTC"));
+        ZonedDateTime localTime = utcTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+
         return new CommitRsDto(
+                this.id.toString(),
                 this.commitMsg,
                 this.getProject().getName(),
                 this.getUser().getName(),
-                this.getCommitTime(),
+                localTime.toLocalDateTime(),
                 (long) this.getRevisions().size(),
                 this.getRevisions().stream().map(Revision::toRsDto).toList()
         );

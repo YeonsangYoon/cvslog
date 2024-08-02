@@ -5,26 +5,17 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.srpinfotec.cvslog.domain.Commit;
-import com.srpinfotec.cvslog.domain.Revision;
 import com.srpinfotec.cvslog.dto.request.CommitRqCond;
 import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 import com.srpinfotec.cvslog.dto.response.QCommitRsDto;
-import com.srpinfotec.cvslog.dto.response.RevisionRsDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.query.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.srpinfotec.cvslog.domain.QCommit.commit;
-import static com.srpinfotec.cvslog.domain.QFile.file;
 import static com.srpinfotec.cvslog.domain.QProject.project;
 import static com.srpinfotec.cvslog.domain.QRevision.revision;
 import static com.srpinfotec.cvslog.domain.QUser.user;

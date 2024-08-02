@@ -1,3 +1,4 @@
 cvs:
   root: ${CVSROOT}
-  workdir: ${CVSWORKDIR}
+  work-dir: ${CVSWORKDIR}
+  log-file-path: ${CVSLOGFILE}

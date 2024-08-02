@@ -1,5 +1,6 @@
 package com.srpinfotec.cvslog.batch;
 
+import com.srpinfotec.cvslog.common.CVSProperties;
 import com.srpinfotec.cvslog.domain.Revision;
 import com.srpinfotec.cvslog.domain.RevisionLog;
 import com.srpinfotec.cvslog.repository.RevisionLogRepository;
@@ -15,13 +16,11 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.validation.BindException;
 
 import java.util.Optional;
 
@@ -30,8 +29,7 @@ import java.util.Optional;
 public class RevisionLogToEntityConfig {
     private final RevisionLogRepository revisionLogRepository;
     private final RevisionRepository revisionRepository;
-//    private final String logFilePath = "/home/cvslogProject/cvslog/logs/cvslog.log";
-    private final String logFilePath = "C:\\Users\\1004d\\IdeaProjects\\cvslog\\src\\main\\resources\\commitLog.txt";   // 로컬 테스트용
+    private final CVSProperties cvsProperties;
 
     @Bean
     @JobScope
@@ -50,7 +48,7 @@ public class RevisionLogToEntityConfig {
     public FlatFileItemReader<RevisionLog> revisionLogItemReader(){
         return new FlatFileItemReaderBuilder<RevisionLog>()
                 .name("RevisionLogItemReader")
-                .resource(new FileSystemResource(logFilePath))
+                .resource(new FileSystemResource(cvsProperties.getLogFilePath()))
                 .lineTokenizer(new LineTokenizer() {
                     @Override
                     public FieldSet tokenize(String line) {

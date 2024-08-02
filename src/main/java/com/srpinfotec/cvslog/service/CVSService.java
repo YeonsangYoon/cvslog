@@ -33,12 +33,14 @@ public class CVSService {
 
     private final CvsCommandExecutor cvsCommandExecutor;
 
+    @Transactional
     public FetchRsDto fetchCvsHistory() {
         // read Cvs History
         Iterable<String> logs = cvsCommandExecutor.executeHistoryCommand();
         return saveLog(logs);
     }
 
+    @Transactional
     public FetchRsDto readHistoryFile(String filepath){
         Iterable<String> logs = cvsCommandExecutor.executeReadLogFile(filepath);
         return saveLog(logs);

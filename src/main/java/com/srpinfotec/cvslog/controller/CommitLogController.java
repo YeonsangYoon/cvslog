@@ -5,9 +5,11 @@ import com.srpinfotec.cvslog.dto.request.CommitRqCond;
 import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 import com.srpinfotec.cvslog.dto.response.FetchRsDto;
 import com.srpinfotec.cvslog.dto.response.ProjectRsDto;
+import com.srpinfotec.cvslog.dto.response.UserRsDto;
 import com.srpinfotec.cvslog.service.CVSService;
 import com.srpinfotec.cvslog.service.CommitService;
 import com.srpinfotec.cvslog.service.ProjectService;
+import com.srpinfotec.cvslog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ public class CommitLogController {
     private final CVSService cvsService;
     private final ProjectService projectService;
     private final CommitService commitService;
+    private final UserService userService;
 
     /**
      * fetch commit 요청
@@ -61,5 +64,13 @@ public class CommitLogController {
 
         return ResponseEntity
                 .ok(ResponseDto.success(commits));
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<ResponseDto> userList(){
+        List<UserRsDto> users = userService.getAllUser();
+
+        return ResponseEntity
+                .ok(ResponseDto.success(users));
     }
 }

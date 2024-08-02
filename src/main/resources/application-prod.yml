@@ -2,6 +2,14 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
+  batch:
+    jdbc:
+      initialize-schema: never
+
+    job:
+      enabled: false
+      name: ${job.name=NONE}
+
 logging:
   level:
     root: info

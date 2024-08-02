@@ -2,6 +2,15 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
+  batch:
+    jdbc:
+      initialize-schema: always
+
+    job:
+      enabled: true
+      name: FetchCvsLogJob
+
+
 logging:
   level:
     root: info

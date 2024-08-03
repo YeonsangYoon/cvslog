@@ -13,13 +13,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 /*
 Fetch 신규 Commit Log
 Job 순서
-1. Bash Command 실행
+1. Bash Command 실행 : BashCommandTasklet
     - Tasklet으로 Bask 커맨드 실행
-2. Log 파일 읽고 Log Entity에 저장
+2. Log 파일 읽고 Log Entity에 저장 : RevisionLogToEntityConfig
     - ItemReader
     - ItemProcessor
     - ItemWriter
-3. Log Entity에서 User, Project, Time을 기준으로 Grouping해서 Commit 엔티티 생성
+3. Log Entity에서 User, Project, Time을 기준으로 Grouping해서 Commit 엔티티 생성 : GroupingLogConfig
     - ItemReader
     - ItemProcessor
     - ItemWriter
@@ -43,13 +43,11 @@ public class FetchCvsLogBatch {
     @Bean
     public Job FetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
                               Tasklet bashCommandTasklet,
-                              Step revisionLogToEntityStep,
-                              Step GroupingLogStep
+                              Step revisionFileToDBStep
                               ){
         return new JobBuilder("FetchCvsLogJob", jr)
                 .incrementer(new RunIdIncrementer())
-                .start(revisionLogToEntityStep)
-                .next(GroupingLogStep)
+                .start(revisionFileToDBStep)
                 .build();
     }
 

@@ -8,7 +8,6 @@ spring:
 
     job:
       enabled: true
-      name: FetchCvsLogJob
 
 
 logging:

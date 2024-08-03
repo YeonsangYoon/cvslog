@@ -31,7 +31,7 @@ public class File extends BaseTime{
     private List<Revision> revisions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROJECT_ID", nullable = false)
+    @JoinColumn(name = "PROJECT_ID")
     private Project project;
 
     public File(String name, String path, Project project) {

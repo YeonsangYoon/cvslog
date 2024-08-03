@@ -1,6 +1,5 @@
 package com.srpinfotec.cvslog.domain;
 
-import com.srpinfotec.cvslog.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.dto.response.RevisionRsDto;
 import com.srpinfotec.cvslog.error.CustomException;
 import jakarta.persistence.*;
@@ -30,7 +29,7 @@ public class Revision extends BaseTime{
     private Commit commit;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "FILE_ID", nullable = false)
+    @JoinColumn(name = "FILE_ID")
     private File file;
 
     @Column(name = "VERSION")

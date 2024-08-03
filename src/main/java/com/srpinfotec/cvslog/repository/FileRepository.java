@@ -8,13 +8,15 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface FileRepository extends JpaRepository<File, Long> {
-    @Query("select f from File f " +
+    @Query("select f from " +
+            "File f " +
+            "join fetch f.project p " +
             "where f.name = :filename and " +
             "f.path = :filepath and " +
-            "f.project.id = :projectId ")
+            "p.name = :projectName ")
     Optional<File> findByLog(
             @Param("filename") String filename,
             @Param("filepath") String filepath,
-            @Param("projectId") Long projectId
+            @Param("projectName") String projectName
     );
 }

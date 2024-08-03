@@ -84,7 +84,7 @@ public class CVSService {
                 Revision revision = new Revision(
                         reviLog.getType(),
                         commit,
-                        fileRepository.findByLog(reviLog.getFilename(), reviLog.getFilepath(), project.getId())
+                        fileRepository.findByLog(reviLog.getFilename(), reviLog.getFilepath(), projectName)
                                 .orElseGet(() -> fileRepository.save(
                                         new com.srpinfotec.cvslog.domain.File(reviLog.getFilename(), reviLog.getFilepath(), project))
                                 ),

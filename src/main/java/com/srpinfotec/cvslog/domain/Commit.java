@@ -15,7 +15,11 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "CVS_COMMIT_HISTORY")
+@Table(name = "CVS_COMMIT_HISTORY",
+        uniqueConstraints = {
+            @UniqueConstraint(columnNames = {"PROJECT_ID", "USER_ID", "COMMIT_TIME"})
+        }
+)
 public class Commit extends BaseTime{
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "COMMIT_ID")
@@ -28,14 +32,14 @@ public class Commit extends BaseTime{
     private LocalDateTime commitTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROJECT_ID", nullable = false)
+    @JoinColumn(name = "PROJECT_ID")
     private Project project;
 
     @OneToMany(mappedBy = "commit")
     private List<Revision> revisions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_ID", nullable = false)
+    @JoinColumn(name = "USER_ID")
     private User user;
 
 

@@ -2,7 +2,9 @@ package com.srpinfotec.cvslog.dto;
 
 import com.srpinfotec.cvslog.domain.RevisionType;
 import com.srpinfotec.cvslog.error.CustomException;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,6 +13,8 @@ import java.time.format.DateTimeFormatter;
  * CVS Commit Log의 내용에 대한 객체
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class RevisionLogEntry {
     private RevisionType type;
     private String filename;

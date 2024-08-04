@@ -5,7 +5,6 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -19,36 +18,24 @@ Job 순서
     - ItemReader
     - ItemProcessor
     - ItemWriter
-3. Log Entity에서 User, Project, Time을 기준으로 Grouping해서 Commit 엔티티 생성 : GroupingLogConfig
-    - ItemReader
-    - ItemProcessor
-    - ItemWriter
-4. Log Entity를 Revision Entity로 이관
-    - ItemReader
-    - ItemProcessor
-    - ItemWriter
-5. Log Entity 전체 삭제
  */
 
 @Configuration
 public class FetchCvsLogBatch {
 
     @Bean
-    public ProcessBuilder processBuilder(){
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.redirectErrorStream(true);
-        return builder;
-    }
-
-    @Bean
     public Job FetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
-                              Tasklet bashCommandTasklet,
+                              Step fetchLogCommandStep,
                               Step revisionFileToDBStep
                               ){
+
         return new JobBuilder("FetchCvsLogJob", jr)
                 .incrementer(new RunIdIncrementer())
-                .start(revisionFileToDBStep)
+                .start(fetchLogCommandStep)
+                .next(revisionFileToDBStep)
                 .build();
     }
+
+
 
 }

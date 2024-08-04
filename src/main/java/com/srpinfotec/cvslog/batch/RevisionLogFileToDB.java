@@ -1,11 +1,13 @@
 package com.srpinfotec.cvslog.batch;
 
+import com.srpinfotec.cvslog.batch.mapper.LogToEntityMapper;
 import com.srpinfotec.cvslog.common.CVSProperties;
 import com.srpinfotec.cvslog.domain.*;
 import com.srpinfotec.cvslog.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.repository.*;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -20,6 +22,7 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.transform.DefaultFieldSet;
 import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.batch.item.file.transform.LineTokenizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
@@ -27,6 +30,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Optional;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class RevisionLogFileToDB {
@@ -42,14 +46,15 @@ public class RevisionLogFileToDB {
 
     @Bean
     @JobScope
-    public Step RevisionFileToDBStep(JobRepository jr,
+    public Step revisionFileToDBStep(JobRepository jr,
                                      PlatformTransactionManager ptm,
                                      ItemReader<RevisionLogEntry> revisionLogItemReader,
                                      ItemProcessor<RevisionLogEntry, Revision> revisionLogItemProcessor,
-                                     ItemWriter<Revision> revisionItemWriter
+                                     ItemWriter<Revision> revisionItemWriter,
+                                     @Value("#{jobParameters['chuckSize']}") Long chuckSize
     ){
         return new StepBuilder("RevisionFileToDBStep", jr)
-                .<RevisionLogEntry, Revision>chunk(10, ptm)
+                .<RevisionLogEntry, Revision>chunk(chuckSize.intValue(), ptm)
                 .reader(revisionLogItemReader)
                 .processor(revisionLogItemProcessor)
                 .writer(revisionItemWriter)
@@ -124,6 +129,7 @@ public class RevisionLogFileToDB {
             @Override
             public void write(Chunk<? extends Revision> chunk) throws Exception {
                 chunk.forEach(revisionRepository::save);
+                log.debug("Write revision log to database (revision count : {})", String.valueOf(chunk.size()));
             }
         };
     }

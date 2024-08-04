@@ -7,12 +7,18 @@ spring:
       initialize-schema: always
 
     job:
-      enabled: true
+      name: ${job.name:NONE}
+      enabled: false
 
 
 logging:
   level:
     root: info
+    com:
+      srpinfotec:
+        cvslog:
+          batch:
+            RevisionLogFileToDB: Debug
 
 server:
   port: 80

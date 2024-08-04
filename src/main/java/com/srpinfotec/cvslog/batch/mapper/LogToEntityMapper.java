@@ -1,4 +1,4 @@
-package com.srpinfotec.cvslog.batch;
+package com.srpinfotec.cvslog.batch.mapper;
 
 import com.srpinfotec.cvslog.domain.RevisionType;
 import com.srpinfotec.cvslog.dto.RevisionLogEntry;

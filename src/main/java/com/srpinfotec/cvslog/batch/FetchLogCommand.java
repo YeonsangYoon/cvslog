@@ -66,4 +66,28 @@ public class FetchLogCommand {
         };
     }
 
+    @Bean
+    @JobScope
+    public Step updateCvsWorkDirectoryStep(JobRepository jr,
+                                           PlatformTransactionManager ptm,
+                                           Tasklet updateCvsWorkDirectoryTasklet) {
+        return new StepBuilder("UpdateCvsWorkDirectoryStep", jr)
+                .tasklet(updateCvsWorkDirectoryTasklet, ptm)
+                .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet updateCvsWorkDirectoryTasklet(){
+        return new Tasklet() {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+                String command = cvsProperties.getScriptDir() + "/update.sh";
+
+                commandExecutor.execute(command);
+
+                return RepeatStatus.FINISHED;
+            }
+        };
+    }
 }

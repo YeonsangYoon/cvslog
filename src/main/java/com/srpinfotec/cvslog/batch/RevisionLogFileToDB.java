@@ -3,7 +3,9 @@ package com.srpinfotec.cvslog.batch;
 import com.srpinfotec.cvslog.batch.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.batch.mapper.LogToEntityMapper;
 import com.srpinfotec.cvslog.common.CVSProperties;
+import com.srpinfotec.cvslog.common.command.CommandExecutor;
 import com.srpinfotec.cvslog.domain.*;
+import com.srpinfotec.cvslog.error.ShellCommandException;
 import com.srpinfotec.cvslog.repository.*;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +33,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -48,6 +52,8 @@ public class RevisionLogFileToDB {
     private final CVSProperties cvsProperties;
 
     private final EntityManager entityManager;
+
+    private final CommandExecutor commandExecutor;
 
     @Bean
     @JobScope
@@ -98,7 +104,8 @@ public class RevisionLogFileToDB {
 
         compositeItemProcessor.setDelegates(Arrays.asList(
                 duplicationCheckItemProcessor(),
-                dtoToEntityItemProcessor()
+                dtoToEntityItemProcessor(),
+                commitMessageItemProcessor()
         ));
 
         return compositeItemProcessor;
@@ -148,6 +155,35 @@ public class RevisionLogFileToDB {
                         file,
                         logEntry.getVersion()
                 );
+            }
+        };
+    }
+
+    @Bean
+    @StepScope
+    public ItemProcessor<Revision, Revision> commitMessageItemProcessor(){
+        return new ItemProcessor<Revision, Revision>() {
+            @Override
+            public Revision process(Revision revision) throws Exception {
+                if(StringUtils.hasLength(revision.getCommit().getCommitMsg())){
+                    return revision;
+                }
+
+                String command = cvsProperties.getScriptDir() +
+                        "/readlog.sh " +
+                        revision.getFile().getPath() +
+                        "/" +
+                        revision.getFile().getName();
+
+                try{
+                    List<String> logs = commandExecutor.executeWithOutput(command);
+                } catch (ShellCommandException e){  // Message 로그 조회 실패 시 processor 넘어감
+                    return revision;
+                }
+
+                // data 추출
+
+                return revision;
             }
         };
     }

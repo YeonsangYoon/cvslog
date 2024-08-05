@@ -8,7 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 운영 커멘드 실행기
@@ -37,5 +41,36 @@ public class ProdCommandExecutor implements CommandExecutor {
         if (exitCode != 0) {
             throw new ShellCommandException("Bash command failed with exit code: " + exitCode);
         }
+    }
+
+    @Override
+    public List<String> executeWithOutput(String command) throws IOException, InterruptedException {
+        log.info("Execute Bash Command : {}", command);
+
+        List<String> logs = new ArrayList<>();
+
+        ProcessBuilder processBuilder = new ProcessBuilder();
+
+        if(SystemUtil.currentOs() == OsType.LINUX){
+            processBuilder.command("bash", "-c", command);
+        } else {
+            processBuilder.command("cmd.exe", "/c", command);
+        }
+
+        Process process = processBuilder.start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                logs.add(line);
+            }
+        }
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new ShellCommandException("Bash command failed with exit code: " + exitCode);
+        }
+
+        return logs;
     }
 }

@@ -18,6 +18,8 @@ public class CommitService {
             cond.setPage(1L);
         }
 
-        return commitRepository.findCommmitDtoByPage(cond);
+        return (cond.getPage() == null) ?
+                commitRepository.findCommitDto(cond) :
+                commitRepository.findCommmitDtoByPage(cond);
     }
 }

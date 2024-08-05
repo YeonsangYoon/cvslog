@@ -1,4 +1,4 @@
-package com.srpinfotec.cvslog.dto;
+package com.srpinfotec.cvslog.batch.dto;
 
 import com.srpinfotec.cvslog.domain.RevisionType;
 import com.srpinfotec.cvslog.error.CustomException;

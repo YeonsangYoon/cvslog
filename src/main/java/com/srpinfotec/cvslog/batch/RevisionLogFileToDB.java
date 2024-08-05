@@ -1,9 +1,9 @@
 package com.srpinfotec.cvslog.batch;
 
+import com.srpinfotec.cvslog.batch.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.batch.mapper.LogToEntityMapper;
 import com.srpinfotec.cvslog.common.CVSProperties;
 import com.srpinfotec.cvslog.domain.*;
-import com.srpinfotec.cvslog.dto.RevisionLogEntry;
 import com.srpinfotec.cvslog.repository.*;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;

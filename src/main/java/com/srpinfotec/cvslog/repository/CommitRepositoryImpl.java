@@ -13,6 +13,8 @@ import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import static com.srpinfotec.cvslog.domain.QCommit.commit;
@@ -83,7 +85,9 @@ public class CommitRepositoryImpl implements CommitCustomRepository{
         BooleanBuilder builder = new BooleanBuilder();
 
         builder.and(projectNameEq(cond.getProject()))
-                .and(userNameEq(cond.getUser()));
+                .and(userNameEq(cond.getUser()))
+                .and(dateGoe(cond.getStartDate()))
+                .and(dateLoe(cond.getEndDate()));
 
         return builder;
     }
@@ -94,5 +98,13 @@ public class CommitRepositoryImpl implements CommitCustomRepository{
 
     private BooleanExpression userNameEq(String userName){
         return hasLength(userName) ? user.name.equalsIgnoreCase(userName) : null;
+    }
+
+    private BooleanExpression dateGoe(LocalDate startDate){
+        return (startDate != null) ? commit.commitTime.goe(startDate.atTime(LocalTime.MIN)) : null;
+    }
+
+    private BooleanExpression dateLoe(LocalDate endDate){
+        return (endDate != null) ? commit.commitTime.loe(endDate.atTime(LocalTime.MAX)) : null;
     }
 }

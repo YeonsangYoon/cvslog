@@ -49,7 +49,7 @@ public class CommitLogController {
     }
 
     /**
-     * 모든 Cvs User 조
+     * 모든 Cvs User 조회
      */
     @GetMapping("/user")
     public ResponseEntity<ResponseDto> userList(){

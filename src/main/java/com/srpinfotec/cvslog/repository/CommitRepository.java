@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface CommitRepository extends JpaRepository<Commit, Long>, CommitCustomRepository {
+public interface CommitRepository extends JpaRepository<Commit, Long>, CommitRepositoryCustom {
     @Query("select c " +
             "from Commit c " +
             "join fetch c.project p " +

@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ProjectRepositoryImpl implements ProjectCustomRepository {
+public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
     private final EntityManager entityManager;
 
     @Override

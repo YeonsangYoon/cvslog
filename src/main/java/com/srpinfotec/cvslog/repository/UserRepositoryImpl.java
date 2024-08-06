@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class UserRepositoryImpl implements UserCustomRepository {
+public class UserRepositoryImpl implements UserRepositoryCustom {
     private final EntityManager entityManager;
 
     @Override

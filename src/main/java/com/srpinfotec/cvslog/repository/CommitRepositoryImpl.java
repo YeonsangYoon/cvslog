@@ -25,7 +25,7 @@ import static org.springframework.util.StringUtils.hasLength;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class CommitRepositoryImpl implements CommitCustomRepository{
+public class CommitRepositoryImpl implements CommitRepositoryCustom {
     private static final Long COMMIT_LIMIT = 100L;   //한 페이지당 commit 최대 개수
 
     private final EntityManager em;

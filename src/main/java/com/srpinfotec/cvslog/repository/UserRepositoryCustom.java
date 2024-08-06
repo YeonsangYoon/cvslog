@@ -4,6 +4,6 @@ import com.srpinfotec.cvslog.domain.User;
 
 import java.util.Optional;
 
-public interface UserCustomRepository {
+public interface UserRepositoryCustom {
     Optional<User> findByNaturalId(Object name);
 }

@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface ProjectRepository extends JpaRepository<Project, Long>, ProjectCustomRepository{
+public interface ProjectRepository extends JpaRepository<Project, Long>, ProjectRepositoryCustom {
     Optional<Project> findByName(String name);
 }

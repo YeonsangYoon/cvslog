@@ -6,7 +6,7 @@ import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 
 import java.util.List;
 
-public interface CommitCustomRepository {
+public interface CommitRepositoryCustom {
     List<CommitRsDto> findCommitDtoWithoutRevision();
 
     List<CommitRsDto> findCommitDto(CommitRqCond cond);

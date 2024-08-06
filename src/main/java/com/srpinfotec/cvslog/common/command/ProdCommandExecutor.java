@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 운영 커멘드 실행기
@@ -22,7 +23,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class ProdCommandExecutor implements CommandExecutor {
-
+    private static final Long COMMAND_TIMEOUT_MINUTE = 10L;
 
     @Override
     public void execute(String command) throws IOException, InterruptedException {
@@ -32,7 +33,7 @@ public class ProdCommandExecutor implements CommandExecutor {
                 .redirectErrorStream(true);
 
         if(SystemUtil.currentOs() == OsType.LINUX){
-            processBuilder.command("bash", "-c", command);
+            processBuilder.command("/bin/bash", "-c", command);
         } else {
             processBuilder.command("cmd.exe", "/c", command);
         }
@@ -43,9 +44,10 @@ public class ProdCommandExecutor implements CommandExecutor {
         process.getInputStream().close();
         process.getOutputStream().close();
 
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new ShellCommandException("Bash command failed with exit code: " + exitCode);
+        boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
+        if (!finished ) {
+            process.destroy();
+            throw new ShellCommandException("Bash command failed");
         }
     }
 
@@ -59,7 +61,7 @@ public class ProdCommandExecutor implements CommandExecutor {
                 .redirectErrorStream(true);
 
         if(SystemUtil.currentOs() == OsType.LINUX){
-            processBuilder.command("bash", "-c", command);
+            processBuilder.command("/bin/bash", "-c", command);
         } else {
             processBuilder.command("cmd.exe", "/c", command);
         }
@@ -73,9 +75,10 @@ public class ProdCommandExecutor implements CommandExecutor {
             }
         }
 
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new ShellCommandException("Bash command failed with exit code: " + exitCode);
+        boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
+        if (!finished ) {
+            process.destroy();
+            throw new ShellCommandException("Bash command failed");
         }
 
         return logs;

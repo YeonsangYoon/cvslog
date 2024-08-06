@@ -22,6 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
+                .maxAge(60*60*24) // 24시간동안 preflight caching
                 .allowedMethods("GET", "POST", "OPTIONS")
                 .allowedOrigins("http://localhost:8106", "https://srp.srpinfotec.com", "https://srp.srpinfotec.com:8082");
     }

@@ -23,11 +23,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProdCommandExecutor implements CommandExecutor {
 
+
     @Override
     public void execute(String command) throws IOException, InterruptedException {
         log.info("Execute Bash Command : {}", command);
 
-        ProcessBuilder processBuilder = new ProcessBuilder();
+        ProcessBuilder processBuilder = new ProcessBuilder()
+                .redirectErrorStream(true);
 
         if(SystemUtil.currentOs() == OsType.LINUX){
             processBuilder.command("bash", "-c", command);
@@ -36,6 +38,10 @@ public class ProdCommandExecutor implements CommandExecutor {
         }
 
         Process process = processBuilder.start();
+
+        process.getErrorStream().close();
+        process.getInputStream().close();
+        process.getOutputStream().close();
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {
@@ -49,7 +55,8 @@ public class ProdCommandExecutor implements CommandExecutor {
 
         List<String> logs = new ArrayList<>();
 
-        ProcessBuilder processBuilder = new ProcessBuilder();
+        ProcessBuilder processBuilder = new ProcessBuilder()
+                .redirectErrorStream(true);
 
         if(SystemUtil.currentOs() == OsType.LINUX){
             processBuilder.command("bash", "-c", command);

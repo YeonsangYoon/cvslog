@@ -23,7 +23,6 @@ public class CommitLogController {
     private final CommitService commitService;
     private final UserService userService;
 
-
     /**
      * 관리 중인 모든 project 조회
      */

@@ -1,14 +1,27 @@
 package com.srpinfotec.cvslog.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor
 public class FetchRsDto {
-    private Integer newCommit;  // 새 커밋 개수
-    private Integer files;      // 업데이트된 파일 개수
+    private String fetchStatus;
+    private Long fetchCount;            // revision 기준 새로운 데이터
 
-    public FetchRsDto(Integer newCommit, Integer files) {
-        this.newCommit = newCommit;
-        this.files = files;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastUpdated;
+
+    public FetchRsDto(String fetchStatus, Long fetchCount, LocalDateTime lastUpdated) {
+        this.fetchStatus = fetchStatus;
+        this.fetchCount = fetchCount;
+        this.lastUpdated = lastUpdated;
+    }
+
+    public static FetchRsDto nonExecutedJob(){
+        return new FetchRsDto("NONE", 0L, null);
     }
 }

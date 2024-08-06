@@ -104,8 +104,8 @@ public class RevisionLogFileToDB {
 
         compositeItemProcessor.setDelegates(Arrays.asList(
                 duplicationCheckItemProcessor(),
-                dtoToEntityItemProcessor(),
-                commitMessageItemProcessor()
+                dtoToEntityItemProcessor()
+//                commitMessageItemProcessor()
         ));
 
         return compositeItemProcessor;

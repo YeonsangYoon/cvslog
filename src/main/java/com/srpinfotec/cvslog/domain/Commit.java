@@ -54,16 +54,12 @@ public class Commit extends BaseTime{
     }
 
     public CommitRsDto toRsDto(){
-        // 시간대 변환 (UTC -> Asia / Seoul)
-        ZonedDateTime utcTime = this.getCommitTime().atZone(ZoneId.of("UTC"));
-        ZonedDateTime localTime = utcTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
-
         return new CommitRsDto(
                 this.id,
                 this.commitMsg,
                 this.getProject().getName(),
                 this.getUser().getName(),
-                localTime.toLocalDateTime(),
+                this.getCommitTime(),
                 (long) this.getRevisions().size(),
                 this.getRevisions().stream().map(Revision::toRsDto).toList()
         );

@@ -1,14 +1,14 @@
 package com.srpinfotec.cvslog.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.srpinfotec.cvslog.domain.Commit;
-import com.srpinfotec.cvslog.domain.Revision;
 import com.srpinfotec.cvslog.dto.request.CommitRqCond;
 import com.srpinfotec.cvslog.dto.response.CommitRsDto;
-import com.srpinfotec.cvslog.dto.response.QCommitRsDto;
+import com.srpinfotec.cvslog.dto.response.RevisionRsDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
     @Override
     public List<CommitRsDto> findCommitDtoWithoutRevision(CommitRqCond cond){
         return queryFactory
-                .select(new QCommitRsDto(
+                .select(Projections.constructor(CommitRsDto.class,
                         commit.id,
                         commit.commitMsg,
                         project.name,
@@ -59,7 +59,7 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
     @Override
     public List<CommitRsDto> findCommitDtoWithoutRevisionByPage(CommitRqCond cond) {
         return queryFactory
-                .select(new QCommitRsDto(
+                .select(Projections.constructor(CommitRsDto.class,
                         commit.id,
                         commit.commitMsg,
                         project.name,
@@ -81,18 +81,43 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
 
     @Override
     public List<CommitRsDto> findCommitDto(CommitRqCond cond){
-        List<Revision> revisions = queryFactory
-                .selectFrom(revision)
-                .innerJoin(revision.commit, commit).fetchJoin()
-                .innerJoin(revision.file, file).fetchJoin()
-                .innerJoin(revision.commit.project, project).fetchJoin()
-                .innerJoin(revision.commit.user, user).fetchJoin()
+        List<CommitRsDto> commitRsDtos = queryFactory
+                .select(Projections.constructor(CommitRsDto.class,
+                        commit.id,
+                        commit.commitMsg,
+                        commit.project.name,
+                        commit.user.name,
+                        commit.commitTime
+                ))
+                .from(commit)
+                .innerJoin(commit.project, project)
+                .innerJoin(commit.user, user)
                 .where(commitSearchCondition(cond))
                 .orderBy(commit.commitTime.desc())
                 .fetch();
 
-        Map<Commit, List<Revision>> commitMap = revisions.stream().collect(groupingBy(Revision::getCommit));
-        return commitMap.keySet().stream().map(Commit::toRsDto).toList();
+        Map<Long, List<RevisionRsDto>> revisionMap = queryFactory
+                .select(Projections.constructor(RevisionRsDto.class,
+                        revision.type,
+                        revision.version,
+                        revision.file.name,
+                        revision.file.path,
+                        revision.commit.id
+                ))
+                .from(revision)
+                .innerJoin(revision.file, file)
+                .where(revision.commit.id.in(
+                        commitRsDtos.stream().map(CommitRsDto::getCommitId).toList()
+                ))
+                .fetch()
+                .stream().collect(groupingBy(RevisionRsDto::getCommitId));
+
+        commitRsDtos.forEach(commitRsDto -> {
+            commitRsDto.setRevisions(revisionMap.get(commitRsDto.getCommitId()));
+            commitRsDto.setRevisionCount((long) commitRsDto.getRevisions().size());
+        });
+
+        return commitRsDtos;
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.srpinfotec.cvslog.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.querydsl.core.annotations.QueryProjection;
+import com.srpinfotec.cvslog.util.TimeUtil;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,14 +23,22 @@ public class CommitRsDto {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<RevisionRsDto> revisions;
 
-    @QueryProjection
+
+    public CommitRsDto(Long commitId, String commitMsg, String projectName, String userName, LocalDateTime commitTime) {
+        this.commitId = commitId;
+        this.commitMsg = commitMsg;
+        this.projectName = projectName;
+        this.userName = userName;
+        this.commitTime = TimeUtil.changeTimeZoneUtcToAsia(commitTime);
+    }
+
     public CommitRsDto(Long commitId, String commitMsg, String projectName, String userName, Long revisionCount, LocalDateTime commitTime) {
         this.commitId = commitId;
         this.commitMsg = commitMsg;
         this.projectName = projectName;
         this.userName = userName;
+        this.commitTime = TimeUtil.changeTimeZoneUtcToAsia(commitTime);
         this.revisionCount = revisionCount;
-        this.commitTime = commitTime;
     }
 
     public CommitRsDto(Long commitId, String commitMsg, String projectName, String userName, LocalDateTime commitTime, Long revisionCount, List<RevisionRsDto> revisions) {
@@ -37,7 +46,7 @@ public class CommitRsDto {
         this.commitMsg = commitMsg;
         this.projectName = projectName;
         this.userName = userName;
-        this.commitTime = commitTime;
+        this.commitTime = TimeUtil.changeTimeZoneUtcToAsia(commitTime);
         this.revisionCount = revisionCount;
         this.revisions = revisions;
     }

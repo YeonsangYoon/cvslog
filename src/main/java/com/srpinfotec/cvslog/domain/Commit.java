@@ -59,7 +59,7 @@ public class Commit extends BaseTime{
         ZonedDateTime localTime = utcTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
 
         return new CommitRsDto(
-                this.id.toString(),
+                this.id,
                 this.commitMsg,
                 this.getProject().getName(),
                 this.getUser().getName(),

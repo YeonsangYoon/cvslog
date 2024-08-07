@@ -4,14 +4,17 @@ import com.srpinfotec.cvslog.dto.ResponseDto;
 import com.srpinfotec.cvslog.dto.request.CommitRqCond;
 import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 import com.srpinfotec.cvslog.dto.response.ProjectRsDto;
+import com.srpinfotec.cvslog.dto.response.RevisionRsDto;
 import com.srpinfotec.cvslog.dto.response.UserRsDto;
 import com.srpinfotec.cvslog.service.CommitService;
 import com.srpinfotec.cvslog.service.ProjectService;
+import com.srpinfotec.cvslog.service.RevisionService;
 import com.srpinfotec.cvslog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,6 +25,7 @@ public class CommitLogController {
     private final ProjectService projectService;
     private final CommitService commitService;
     private final UserService userService;
+    private final RevisionService revisionService;
 
     /**
      * 관리 중인 모든 project 조회
@@ -41,10 +45,18 @@ public class CommitLogController {
     public ResponseEntity<ResponseDto> commitListByProject(
             @ModelAttribute CommitRqCond cond
     ){
-        List<CommitRsDto> commits = commitService.getCommitList(cond);
+        List<CommitRsDto> commits = commitService.getCommitWithoutRevision(cond);
 
         return ResponseEntity
                 .ok(ResponseDto.success(commits));
+    }
+
+    @GetMapping("/commit/{commitId}/revision")
+    public ResponseEntity<ResponseDto> revisionListByCommitId(@PathVariable Long commitId){
+        List<RevisionRsDto> revisions = revisionService.getRevisionByCommit(commitId);
+
+        return ResponseEntity
+                .ok(ResponseDto.success(revisions));
     }
 
     /**

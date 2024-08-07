@@ -20,4 +20,10 @@ public class CommitService {
                 commitRepository.findCommitDto(cond) :
                 commitRepository.findCommmitDtoByPage(cond);
     }
+
+    public List<CommitRsDto> getCommitWithoutRevision(CommitRqCond cond){
+        return (cond.getPage() == null) ?
+                commitRepository.findCommitDtoWithoutRevision(cond) :
+                commitRepository.findCommitDtoWithoutRevisionByPage(cond);
+    }
 }

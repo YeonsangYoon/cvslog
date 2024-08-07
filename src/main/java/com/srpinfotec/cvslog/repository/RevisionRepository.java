@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RevisionRepository extends JpaRepository<Revision, Long> {
@@ -16,4 +17,6 @@ public interface RevisionRepository extends JpaRepository<Revision, Long> {
             @Param("filepath") String filepath,
             @Param("version") Long version
     );
+
+    List<Revision> findByCommitId(Long commitId);
 }

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 public class CommitRsDto {
-    private String commitId;
+    private Long commitId;
     private String commitMsg;
     private String projectName;
     private String userName;
@@ -23,15 +23,16 @@ public class CommitRsDto {
     private List<RevisionRsDto> revisions;
 
     @QueryProjection
-    public CommitRsDto(String commitMsg, String projectName, String userName, LocalDateTime commitTime, Long revisionCount) {
+    public CommitRsDto(Long commitId, String commitMsg, String projectName, String userName, Long revisionCount, LocalDateTime commitTime) {
+        this.commitId = commitId;
         this.commitMsg = commitMsg;
         this.projectName = projectName;
         this.userName = userName;
-        this.commitTime = commitTime;
         this.revisionCount = revisionCount;
+        this.commitTime = commitTime;
     }
 
-    public CommitRsDto(String commitId, String commitMsg, String projectName, String userName, LocalDateTime commitTime, Long revisionCount, List<RevisionRsDto> revisions) {
+    public CommitRsDto(Long commitId, String commitMsg, String projectName, String userName, LocalDateTime commitTime, Long revisionCount, List<RevisionRsDto> revisions) {
         this.commitId = commitId;
         this.commitMsg = commitMsg;
         this.projectName = projectName;

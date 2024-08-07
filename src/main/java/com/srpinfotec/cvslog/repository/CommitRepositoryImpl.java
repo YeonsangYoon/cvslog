@@ -33,20 +33,46 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<CommitRsDto> findCommitDtoWithoutRevision(){
+    public List<CommitRsDto> findCommitDtoWithoutRevision(CommitRqCond cond){
         return queryFactory
                 .select(new QCommitRsDto(
+                        commit.id,
                         commit.commitMsg,
                         project.name,
                         user.name,
-                        commit.commitTime,
                         JPAExpressions.select(revision.count())
                                 .from(revision)
-                                .where(revision.commit.eq(commit))
+                                .where(revision.commit.eq(commit)),
+                        commit.commitTime
                 ))
                 .from(commit)
                 .innerJoin(commit.project, project)
                 .innerJoin(commit.user, user)
+                .where(commitSearchCondition(cond))
+                .orderBy(commit.commitTime.desc())
+                .fetch();
+    }
+
+    @Override
+    public List<CommitRsDto> findCommitDtoWithoutRevisionByPage(CommitRqCond cond) {
+        return queryFactory
+                .select(new QCommitRsDto(
+                        commit.id,
+                        commit.commitMsg,
+                        project.name,
+                        user.name,
+                        JPAExpressions.select(revision.count())
+                                .from(revision)
+                                .where(revision.commit.eq(commit)),
+                        commit.commitTime
+                ))
+                .from(commit)
+                .innerJoin(commit.project, project)
+                .innerJoin(commit.user, user)
+                .where(commitSearchCondition(cond))
+                .offset((cond.getPage() - 1) * COMMIT_LIMIT)
+                .limit(COMMIT_LIMIT)
+                .orderBy(commit.commitTime.desc())
                 .fetch();
     }
 

@@ -45,7 +45,7 @@ public class CommitLogController {
     public ResponseEntity<ResponseDto> commitListByProject(
             @ModelAttribute CommitRqCond cond
     ){
-        List<CommitRsDto> commits = commitService.getCommitWithoutRevision(cond);
+        List<CommitRsDto> commits = commitService.getCommitList(cond);
 
         return ResponseEntity
                 .ok(ResponseDto.success(commits));

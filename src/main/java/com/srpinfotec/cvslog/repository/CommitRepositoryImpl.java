@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.srpinfotec.cvslog.domain.Commit;
+import com.srpinfotec.cvslog.domain.Revision;
 import com.srpinfotec.cvslog.dto.request.CommitRqCond;
 import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 import com.srpinfotec.cvslog.dto.response.QCommitRsDto;
@@ -15,12 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
+import java.util.*;
 
 import static com.srpinfotec.cvslog.domain.QCommit.commit;
 import static com.srpinfotec.cvslog.domain.QProject.project;
 import static com.srpinfotec.cvslog.domain.QRevision.revision;
 import static com.srpinfotec.cvslog.domain.QUser.user;
+import static com.srpinfotec.cvslog.domain.QFile.file;
+import static java.util.stream.Collectors.groupingBy;
 import static org.springframework.util.StringUtils.hasLength;
 
 @Transactional(readOnly = true)
@@ -46,8 +49,8 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
                         commit.commitTime
                 ))
                 .from(commit)
-                .innerJoin(commit.project, project)
-                .innerJoin(commit.user, user)
+                .innerJoin(commit.project, project).fetchJoin()
+                .innerJoin(commit.user, user).fetchJoin()
                 .where(commitSearchCondition(cond))
                 .orderBy(commit.commitTime.desc())
                 .fetch();
@@ -67,8 +70,8 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
                         commit.commitTime
                 ))
                 .from(commit)
-                .innerJoin(commit.project, project)
-                .innerJoin(commit.user, user)
+                .innerJoin(commit.project, project).fetchJoin()
+                .innerJoin(commit.user, user).fetchJoin()
                 .where(commitSearchCondition(cond))
                 .offset((cond.getPage() - 1) * COMMIT_LIMIT)
                 .limit(COMMIT_LIMIT)
@@ -78,15 +81,18 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
 
     @Override
     public List<CommitRsDto> findCommitDto(CommitRqCond cond){
-        List<Commit> commits = queryFactory
-                .selectFrom(commit)
-                .innerJoin(commit.user, user).fetchJoin()
-                .innerJoin(commit.project, project).fetchJoin()
+        List<Revision> revisions = queryFactory
+                .selectFrom(revision)
+                .innerJoin(revision.commit, commit).fetchJoin()
+                .innerJoin(revision.file, file).fetchJoin()
+                .innerJoin(revision.commit.project, project).fetchJoin()
+                .innerJoin(revision.commit.user, user).fetchJoin()
                 .where(commitSearchCondition(cond))
                 .orderBy(commit.commitTime.desc())
                 .fetch();
 
-        return commits.stream().map(Commit::toRsDto).toList();
+        Map<Commit, List<Revision>> commitMap = revisions.stream().collect(groupingBy(Revision::getCommit));
+        return commitMap.keySet().stream().map(Commit::toRsDto).toList();
     }
 
     @Override

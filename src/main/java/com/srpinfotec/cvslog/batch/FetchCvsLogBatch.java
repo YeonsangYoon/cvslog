@@ -26,14 +26,12 @@ public class FetchCvsLogBatch {
     @Bean
     public Job FetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
                               Step fetchLogCommandStep,
-                              Step updateCvsWorkDirectoryStep,
                               Step revisionFileToDBStep
                               ){
 
         return new JobBuilder("FetchCvsLogJob", jr)
                 .incrementer(new RunIdIncrementer())
                 .start(fetchLogCommandStep)
-                .next(updateCvsWorkDirectoryStep)
                 .next(revisionFileToDBStep)
                 .build();
     }

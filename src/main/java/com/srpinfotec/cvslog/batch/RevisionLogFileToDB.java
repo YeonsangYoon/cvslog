@@ -35,9 +35,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Configuration
@@ -104,8 +102,8 @@ public class RevisionLogFileToDB {
 
         compositeItemProcessor.setDelegates(Arrays.asList(
                 duplicationCheckItemProcessor(),
-                dtoToEntityItemProcessor()
-//                commitMessageItemProcessor()
+                dtoToEntityItemProcessor(),
+                commitMessageItemProcessor()
         ));
 
         return compositeItemProcessor;
@@ -175,13 +173,37 @@ public class RevisionLogFileToDB {
                         "/" +
                         revision.getFile().getName();
 
+                List<String> logs;
                 try{
-                    List<String> logs = commandExecutor.executeWithOutput(command);
+                    logs = commandExecutor.executeWithOutput(command);
                 } catch (ShellCommandException e){  // Message 로그 조회 실패 시 processor 넘어감
                     return revision;
                 }
 
+                String commitMsg = null;
                 // data 추출
+                Iterator<String> iterator = logs.iterator();
+                while(!iterator.hasNext()){
+                    String line = iterator.next();
+
+                    if(line.startsWith("revision")){
+                        String updateInfo = iterator.next();
+                        List<String> messages = new ArrayList<>();
+
+                        while(!iterator.hasNext()){
+                            String msg = iterator.next();
+
+                            if(msg.startsWith("----------------------------")){
+                                break;
+                            }
+                            messages.add(msg);
+                        }
+
+                        commitMsg = String.join(System.lineSeparator(), messages);
+                    }
+                }
+
+                revision.getCommit().setCommitMsg(commitMsg);
 
                 return revision;
             }

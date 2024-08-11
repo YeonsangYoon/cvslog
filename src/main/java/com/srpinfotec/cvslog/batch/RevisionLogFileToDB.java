@@ -8,6 +8,7 @@ import com.srpinfotec.cvslog.domain.*;
 import com.srpinfotec.cvslog.error.ShellCommandException;
 import com.srpinfotec.cvslog.repository.*;
 import jakarta.persistence.EntityManager;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Step;
@@ -163,7 +164,10 @@ public class RevisionLogFileToDB {
         return new ItemProcessor<Revision, Revision>() {
             @Override
             public Revision process(Revision revision) throws Exception {
-                if(StringUtils.hasLength(revision.getCommit().getCommitMsg())){
+                Commit commit = revision.getCommit();
+
+                // Commit Message 유무 확인
+                if(StringUtils.hasLength(commit.getCommitMsg())){
                     return revision;
                 }
 
@@ -180,34 +184,58 @@ public class RevisionLogFileToDB {
                     return revision;
                 }
 
-                String commitMsg = null;
                 // data 추출
+                List<LogBuffer> logBuffers = new ArrayList<>();
                 Iterator<String> iterator = logs.iterator();
+
                 while(!iterator.hasNext()){
                     String line = iterator.next();
 
                     if(line.startsWith("revision")){
-                        String updateInfo = iterator.next();
-                        List<String> messages = new ArrayList<>();
+                        LogBuffer logBuffer = new LogBuffer();
 
+                        logBuffer.setVersionLine(line);
+                        logBuffer.setUpdateInfoLine(iterator.next());
+
+                        StringBuffer msg = new StringBuffer();
                         while(!iterator.hasNext()){
-                            String msg = iterator.next();
+                            String next = iterator.next();
 
-                            if(msg.startsWith("----------------------------")){
+                            if(next.startsWith("----------------------------")){
                                 break;
                             }
-                            messages.add(msg);
+                            msg.append(next).append(System.lineSeparator());
                         }
+                        logBuffer.setMessage(msg.toString());
 
-                        commitMsg = String.join(System.lineSeparator(), messages);
+                        logBuffers.add(logBuffer);
                     }
                 }
 
-                revision.getCommit().setCommitMsg(commitMsg);
+                logBuffers.forEach(logBuffer -> {
+                    if(logBuffer.getVersion().equals(revision.getVersion())){
+                        commit.setCommitMsg(logBuffer.getMessage());
+                    }
+                });
 
                 return revision;
             }
         };
+    }
+
+    @Data
+    private static class LogBuffer{
+        private String versionLine;
+        private String updateInfoLine;
+        private String message;
+
+        private Long getVersion() {
+            String[] tokens = versionLine.split("\\.");
+
+            if (tokens.length < 2) return -1L;  // version line 패턴
+
+            return Long.parseLong(tokens[1]);
+        }
     }
 
     @Bean

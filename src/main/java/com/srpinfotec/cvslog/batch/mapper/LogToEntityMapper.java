@@ -1,7 +1,7 @@
 package com.srpinfotec.cvslog.batch.mapper;
 
-import com.srpinfotec.cvslog.domain.RevisionType;
 import com.srpinfotec.cvslog.batch.dto.RevisionLogEntry;
+import com.srpinfotec.cvslog.domain.RevisionType;
 import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;

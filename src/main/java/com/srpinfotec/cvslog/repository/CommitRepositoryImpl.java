@@ -16,13 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import static com.srpinfotec.cvslog.domain.QCommit.commit;
+import static com.srpinfotec.cvslog.domain.QFile.file;
 import static com.srpinfotec.cvslog.domain.QProject.project;
 import static com.srpinfotec.cvslog.domain.QRevision.revision;
 import static com.srpinfotec.cvslog.domain.QUser.user;
-import static com.srpinfotec.cvslog.domain.QFile.file;
 import static java.util.stream.Collectors.groupingBy;
 import static org.springframework.util.StringUtils.hasLength;
 

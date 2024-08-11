@@ -2,7 +2,6 @@ package com.srpinfotec.cvslog.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.querydsl.core.annotations.QueryProjection;
 import com.srpinfotec.cvslog.util.TimeUtil;
 import lombok.Data;
 

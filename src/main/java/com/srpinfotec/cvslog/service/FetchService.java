@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +15,6 @@ import java.util.Collection;
 import java.util.Map;
 
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class FetchService {
     private final JobExplorer jobExplorer;
@@ -26,7 +23,8 @@ public class FetchService {
 
     public FetchRsDto fetch(FetchRqCond cond){
         try {
-            JobExecution jobExecution = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(cond.getBaseDate()));
+            LocalDate baseDate = (cond != null) ? cond.getBaseDate() : LocalDate.now();
+            JobExecution jobExecution = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(baseDate));
 
             return fetchJobExecutionToDto(jobExecution);
 
@@ -36,10 +34,10 @@ public class FetchService {
     }
 
 
-    private JobParameters getFetchJobParams(@Nullable LocalDate baseDate){
+    private JobParameters getFetchJobParams(LocalDate baseDate){
         return new JobParametersBuilder()
                 .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
-                .addLocalDate("basedate", baseDate == null ? LocalDate.now() : baseDate)
+                .addLocalDate("basedate", baseDate)
                 .addLong("chuckSize", 100L)
                 .toJobParameters();
     }

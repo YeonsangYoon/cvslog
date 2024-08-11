@@ -18,7 +18,7 @@ public class BatchController {
 
 
     @PostMapping("/fetch")
-    public ResponseEntity<ResponseDto> fetchDailyCvsLog(@RequestBody FetchRqCond cond){
+    public ResponseEntity<ResponseDto> fetchDailyCvsLog(@RequestBody(required = false) FetchRqCond cond){
         FetchRsDto result = fetchService.fetch(cond);
 
         return ResponseEntity

@@ -72,4 +72,19 @@ public class FetchService {
 
         return fetchJobExecutionToDto(jobExecution);
     }
+
+    public FetchRsDto fetchAll() {
+        try {
+            JobExecution jobExecution = jobLauncher.run(jobs.get("FetchCvsLogJob"),
+                    new JobParametersBuilder()
+                            .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
+                            .addLong("chuckSize", 300L)
+                            .toJobParameters());
+
+            return fetchJobExecutionToDto(jobExecution);
+
+        } catch (JobExecutionException e) {
+            throw new CustomException("job 실행 에러");
+        }
+    }
 }

@@ -37,6 +37,14 @@ public class BatchController {
                 .ok(ResponseDto.success(result));
     }
 
+    @PostMapping("/fetch/all")
+    public ResponseEntity<ResponseDto> fetchAllLog(){
+        FetchRsDto result = fetchService.fetchAll();
+
+        return ResponseEntity
+                .ok(ResponseDto.success(result));
+    }
+
     @GetMapping("/fetch")
     public ResponseEntity<ResponseDto> lastUpdateFetch(){
         FetchRsDto recentResult = fetchService.getRecentFetchResult();

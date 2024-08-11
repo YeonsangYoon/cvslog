@@ -22,9 +22,12 @@ public class FetchService {
     private final Map<String, Job> jobs;
 
     public FetchRsDto fetch(FetchRqCond cond){
+        LocalDate baseDate = (cond != null) ? cond.getBaseDate() : LocalDate.now();
+        Long chuckSize = (cond != null) ? cond.getChuckSize() : 100L;
+
         try {
-            LocalDate baseDate = (cond != null) ? cond.getBaseDate() : LocalDate.now();
-            JobExecution jobExecution = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(baseDate));
+            JobExecution jobExecution
+                    = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(baseDate, chuckSize));
 
             return fetchJobExecutionToDto(jobExecution);
 
@@ -34,11 +37,11 @@ public class FetchService {
     }
 
 
-    private JobParameters getFetchJobParams(LocalDate baseDate){
+    private JobParameters getFetchJobParams(LocalDate baseDate, Long chuckSize){
         return new JobParametersBuilder()
                 .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
                 .addLocalDate("basedate", baseDate)
-                .addLong("chuckSize", 100L)
+                .addLong("chuckSize", chuckSize)
                 .toJobParameters();
     }
 

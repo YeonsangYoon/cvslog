@@ -26,7 +26,7 @@ class CommitRepositoryImplTest {
 
     @Test
     public void 쿼리dsl조회테스트(){
-        List<CommitRsDto> dtos = commitRepository.findCommitDtoWithoutRevision();
+        List<CommitRsDto> dtos = commitRepository.findCommitDtoWithoutRevision(null);
 
         for(CommitRsDto dto : dtos){
             System.out.println("dto = " + dto);

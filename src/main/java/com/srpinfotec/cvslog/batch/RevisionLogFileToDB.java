@@ -201,7 +201,7 @@ public class RevisionLogFileToDB {
                         while(iterator.hasNext()){
                             String next = iterator.next();
 
-                            if(next.startsWith("----------------------------")){
+                            if(next.startsWith("----------------------------") || next.startsWith("=============================================================================")){
                                 break;
                             }
                             msg.append(next).append(System.lineSeparator());

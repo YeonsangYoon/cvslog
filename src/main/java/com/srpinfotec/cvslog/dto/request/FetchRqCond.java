@@ -10,9 +10,11 @@ public class FetchRqCond {
     @JsonFormat(pattern = "yyyyMMdd")
     private LocalDate baseDate;
     private String password;
+    private Long chuckSize;
 
-    public FetchRqCond(LocalDate baseDate, String password) {
+    public FetchRqCond(LocalDate baseDate, String password, Long chuckSize) {
         this.baseDate = baseDate;
         this.password = password;
+        this.chuckSize = chuckSize;
     }
 }

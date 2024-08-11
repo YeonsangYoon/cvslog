@@ -188,7 +188,7 @@ public class RevisionLogFileToDB {
                 List<LogBuffer> logBuffers = new ArrayList<>();
                 Iterator<String> iterator = logs.iterator();
 
-                while(!iterator.hasNext()){
+                while(iterator.hasNext()){
                     String line = iterator.next();
 
                     if(line.startsWith("revision")){
@@ -198,7 +198,7 @@ public class RevisionLogFileToDB {
                         logBuffer.setUpdateInfoLine(iterator.next());
 
                         StringBuffer msg = new StringBuffer();
-                        while(!iterator.hasNext()){
+                        while(iterator.hasNext()){
                             String next = iterator.next();
 
                             if(next.startsWith("----------------------------")){

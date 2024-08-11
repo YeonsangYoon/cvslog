@@ -9,7 +9,6 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Map;
@@ -22,12 +21,9 @@ public class FetchService {
     private final Map<String, Job> jobs;
 
     public FetchRsDto fetch(FetchRqCond cond){
-        LocalDate baseDate = (cond != null) ? cond.getBaseDate() : LocalDate.now();
-        Long chuckSize = (cond != null) ? cond.getChuckSize() : 100L;
-
         try {
             JobExecution jobExecution
-                    = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(baseDate, chuckSize));
+                    = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(cond));
 
             return fetchJobExecutionToDto(jobExecution);
 
@@ -37,11 +33,11 @@ public class FetchService {
     }
 
 
-    private JobParameters getFetchJobParams(LocalDate baseDate, Long chuckSize){
+    private JobParameters getFetchJobParams(FetchRqCond cond){
         return new JobParametersBuilder()
                 .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
-                .addLocalDate("basedate", baseDate)
-                .addLong("chuckSize", chuckSize)
+                .addLocalDate("basedate", cond.getBaseDate())
+                .addLong("chuckSize", cond.getChuckSize())
                 .toJobParameters();
     }
 

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+
 @RestController
 @RequiredArgsConstructor
 public class BatchController {
@@ -19,6 +21,16 @@ public class BatchController {
 
     @PostMapping("/fetch")
     public ResponseEntity<ResponseDto> fetchDailyCvsLog(@RequestBody(required = false) FetchRqCond cond){
+        if(cond == null) {
+            cond = new FetchRqCond(LocalDate.now(), null, 100L);
+        }
+        if(cond.getBaseDate() == null){
+            cond.setBaseDate(LocalDate.now());
+        }
+        if(cond.getPassword() == null){
+            cond.setChuckSize(100L);
+        }
+
         FetchRsDto result = fetchService.fetch(cond);
 
         return ResponseEntity

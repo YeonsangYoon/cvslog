@@ -27,7 +27,7 @@ public class ProdCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(String command) throws IOException, InterruptedException {
-        log.info("Execute Bash Command : {}", command);
+        log.debug("Execute Bash Command : {}", command);
 
         ProcessBuilder processBuilder = new ProcessBuilder()
                 .redirectErrorStream(true);
@@ -53,7 +53,7 @@ public class ProdCommandExecutor implements CommandExecutor {
 
     @Override
     public List<String> executeWithOutput(String command) throws IOException, InterruptedException {
-        log.info("Execute Bash Command : {}", command);
+        log.debug("Execute Bash Command : {}", command);
 
         List<String> logs = new ArrayList<>();
 

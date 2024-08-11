@@ -43,7 +43,7 @@ public class LogToEntityMapper implements FieldSetMapper<RevisionLogEntry> {
 
             // filename
             StringBuilder filename = new StringBuilder();
-            for(int i = 0; i < extraTokenCount; i++){
+            for(int i = 0; i <= extraTokenCount; i++){
                 filename.append(fieldSet.readString(6 + i));
             }
 

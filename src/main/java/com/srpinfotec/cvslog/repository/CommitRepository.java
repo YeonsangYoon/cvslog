@@ -1,6 +1,8 @@
 package com.srpinfotec.cvslog.repository;
 
 import com.srpinfotec.cvslog.domain.Commit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,7 @@ public interface CommitRepository extends JpaRepository<Commit, Long>, CommitRep
             @Param("projectName") String projectName,
             @Param("userName") String userName
     );
+
+    @Query("select c from Commit c where c.commitMsg is null")
+    Page<Commit> findCommitMsgIsNull(Pageable pageable);
 }

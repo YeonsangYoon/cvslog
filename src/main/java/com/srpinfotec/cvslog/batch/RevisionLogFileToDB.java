@@ -1,6 +1,7 @@
 package com.srpinfotec.cvslog.batch;
 
 import com.srpinfotec.cvslog.batch.dto.RevisionLogEntry;
+import com.srpinfotec.cvslog.batch.mapper.CvsLogUtil;
 import com.srpinfotec.cvslog.batch.mapper.LogToEntityMapper;
 import com.srpinfotec.cvslog.common.CVSProperties;
 import com.srpinfotec.cvslog.common.command.CommandExecutor;
@@ -8,7 +9,6 @@ import com.srpinfotec.cvslog.domain.*;
 import com.srpinfotec.cvslog.error.ShellCommandException;
 import com.srpinfotec.cvslog.repository.*;
 import jakarta.persistence.EntityManager;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Step;
@@ -59,15 +59,45 @@ public class RevisionLogFileToDB {
     public Step revisionFileToDBStep(JobRepository jr,
                                      PlatformTransactionManager ptm,
                                      ItemReader<RevisionLogEntry> revisionLogItemReader,
-                                     ItemProcessor<RevisionLogEntry, Revision> revisionLogItemProcessor,
+                                     ItemProcessor<RevisionLogEntry, RevisionLogEntry> duplicationCheckItemProcessor,
+                                     ItemProcessor<RevisionLogEntry, Revision> dtoToEntityItemProcessor,
+                                     ItemProcessor<Revision, Revision> commitMessageItemProcessor,
                                      ItemWriter<Revision> revisionItemWriter,
                                      SkipPolicy parseLogSkipPolicy,
-                                     @Value("#{jobParameters['chuckSize']}") Long chuckSize
+                                     @Value("#{jobParameters['chunkSize']}") Long chunkSize
     ){
         return new StepBuilder("RevisionFileToDBStep", jr)
+                .<RevisionLogEntry, Revision>chunk(chunkSize.intValue(), ptm)
+                .reader(revisionLogItemReader)
+                .processor(new CompositeItemProcessor<>(
+                        duplicationCheckItemProcessor,
+                        dtoToEntityItemProcessor,
+                        commitMessageItemProcessor
+                ))
+                .writer(revisionItemWriter)
+                .faultTolerant()
+                .skipPolicy(parseLogSkipPolicy)
+                .build();
+    }
+
+    @Bean
+    @JobScope
+    public Step revisionFileToDBStepWithoutCommitMsg(JobRepository jr,
+                                           PlatformTransactionManager ptm,
+                                           ItemReader<RevisionLogEntry> revisionLogItemReader,
+                                           ItemProcessor<RevisionLogEntry, RevisionLogEntry> duplicationCheckItemProcessor,
+                                           ItemProcessor<RevisionLogEntry, Revision> dtoToEntityItemProcessor,
+                                           ItemWriter<Revision> revisionItemWriter,
+                                           SkipPolicy parseLogSkipPolicy,
+                                           @Value("#{jobParameters['chunkSize']}") Long chuckSize
+    ){
+        return new StepBuilder("RevisionFileToDBStepWithoutCommitMsg", jr)
                 .<RevisionLogEntry, Revision>chunk(chuckSize.intValue(), ptm)
                 .reader(revisionLogItemReader)
-                .processor(revisionLogItemProcessor)
+                .processor(new CompositeItemProcessor<>(
+                        duplicationCheckItemProcessor,
+                        dtoToEntityItemProcessor
+                ))
                 .writer(revisionItemWriter)
                 .faultTolerant()
                 .skipPolicy(parseLogSkipPolicy)
@@ -94,20 +124,6 @@ public class RevisionLogFileToDB {
                 })
                 .fieldSetMapper(new LogToEntityMapper())
                 .build();
-    }
-
-    @Bean
-    @StepScope
-    public CompositeItemProcessor<RevisionLogEntry, Revision> revisionLogItemProcessor(){
-        CompositeItemProcessor<RevisionLogEntry, Revision> compositeItemProcessor = new CompositeItemProcessor<>();
-
-        compositeItemProcessor.setDelegates(Arrays.asList(
-                duplicationCheckItemProcessor(),
-                dtoToEntityItemProcessor(),
-                commitMessageItemProcessor()
-        ));
-
-        return compositeItemProcessor;
     }
 
     @Bean
@@ -185,57 +201,11 @@ public class RevisionLogFileToDB {
                 }
 
                 // data 추출
-                List<LogBuffer> logBuffers = new ArrayList<>();
-                Iterator<String> iterator = logs.iterator();
-
-                while(iterator.hasNext()){
-                    String line = iterator.next();
-
-                    if(line.startsWith("revision")){
-                        LogBuffer logBuffer = new LogBuffer();
-
-                        logBuffer.setVersionLine(line);
-                        logBuffer.setUpdateInfoLine(iterator.next());
-
-                        StringBuffer msg = new StringBuffer();
-                        while(iterator.hasNext()){
-                            String next = iterator.next();
-
-                            if(next.startsWith("----------------------------") || next.startsWith("=============================================================================")){
-                                break;
-                            }
-                            msg.append(next).append(System.lineSeparator());
-                        }
-                        logBuffer.setMessage(msg.toString());
-
-                        logBuffers.add(logBuffer);
-                    }
-                }
-
-                logBuffers.forEach(logBuffer -> {
-                    if(logBuffer.getVersion().equals(revision.getVersion())){
-                        commit.setCommitMsg(logBuffer.getMessage());
-                    }
-                });
+                commit.setCommitMsg(CvsLogUtil.getCommitMessageFromLog(revision.getVersion(), logs.iterator()));
 
                 return revision;
             }
         };
-    }
-
-    @Data
-    private static class LogBuffer{
-        private String versionLine;
-        private String updateInfoLine;
-        private String message;
-
-        private Long getVersion() {
-            String[] tokens = versionLine.split("\\.");
-
-            if (tokens.length < 2) return -1L;  // version line 패턴
-
-            return Long.parseLong(tokens[1]);
-        }
     }
 
     @Bean

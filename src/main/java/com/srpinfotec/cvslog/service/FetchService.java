@@ -1,5 +1,6 @@
 package com.srpinfotec.cvslog.service;
 
+import com.srpinfotec.cvslog.config.BatchConfig;
 import com.srpinfotec.cvslog.dto.request.FetchRqCond;
 import com.srpinfotec.cvslog.dto.response.FetchRsDto;
 import com.srpinfotec.cvslog.error.CustomException;
@@ -17,30 +18,41 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FetchService {
     private final JobExplorer jobExplorer;
-    private final JobLauncher jobLauncher;
-    private final Map<String, Job> jobs;
+    private final BatchConfig batchConfig;
 
-    public FetchRsDto fetch(FetchRqCond cond){
+    public FetchRsDto fetch(){
         try {
-            JobExecution jobExecution
-                    = jobLauncher.run(jobs.get("FetchCvsLogJob"), getFetchJobParams(cond));
+            JobExecution jobExecution = batchConfig.runDailyFetchCvsLog();
 
             return fetchJobExecutionToDto(jobExecution);
 
-        } catch (JobExecutionException e) {
+        } catch (Exception e) {
+            throw new CustomException("job 실행 에러");
+        }
+    }
+
+    public void fetchAll() {
+        try {
+
+            batchConfig.runFetchCvsLogWithoutCommitMsg();
+
+        } catch (Exception e) {
+            throw new CustomException("job 실행 에러");
+        }
+    }
+
+    public void fetchCommitMessage(){
+        try{
+            batchConfig.runFetchCommitMessage();
+        } catch (Exception e){
             throw new CustomException("job 실행 에러");
         }
     }
 
 
-    private JobParameters getFetchJobParams(FetchRqCond cond){
-        return new JobParametersBuilder()
-                .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
-                .addLocalDate("basedate", cond.getBaseDate())
-                .addLong("chuckSize", cond.getChuckSize())
-                .toJobParameters();
-    }
-
+    /**
+     * JobExecution을 FetchDto로 변환
+     */
     private FetchRsDto fetchJobExecutionToDto(JobExecution jobExecution){
         if(jobExecution == null){
             return null;
@@ -62,6 +74,9 @@ public class FetchService {
         );
     }
 
+    /**
+     * 최근 Fetch 결과 반환
+     */
     public FetchRsDto getRecentFetchResult(){
         JobInstance jobInstance = jobExplorer.getLastJobInstance("FetchCvsLogJob");
 
@@ -71,20 +86,5 @@ public class FetchService {
         JobExecution jobExecution = jobExplorer.getLastJobExecution(jobInstance);
 
         return fetchJobExecutionToDto(jobExecution);
-    }
-
-    public FetchRsDto fetchAll() {
-        try {
-            JobExecution jobExecution = jobLauncher.run(jobs.get("FetchCvsLogJob"),
-                    new JobParametersBuilder()
-                            .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
-                            .addLong("chuckSize", 300L)
-                            .toJobParameters());
-
-            return fetchJobExecutionToDto(jobExecution);
-
-        } catch (JobExecutionException e) {
-            throw new CustomException("job 실행 에러");
-        }
     }
 }

@@ -23,8 +23,11 @@ Job 순서
 @Configuration
 public class FetchCvsLogBatch {
 
+    /**
+     * commit message까지 추출하는 fetch
+     */
     @Bean
-    public Job FetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
+    public Job fetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
                               Step fetchLogCommandStep,
                               Step revisionFileToDBStep
                               ){
@@ -37,5 +40,20 @@ public class FetchCvsLogBatch {
     }
 
 
+    /**
+     * commit message는 추출하지 않는 fetch
+     */
+    @Bean
+    public Job fetchCvsLogJobWithoutCommitMsg(JobRepository jr, PlatformTransactionManager ptm,
+                                 Step fetchLogCommandStep,
+                                 Step revisionFileToDBStepWithoutCommitMsg
+    ){
+
+        return new JobBuilder("FetchCvsLogJobWithoutCommitMsg", jr)
+                .incrementer(new RunIdIncrementer())
+                .start(fetchLogCommandStep)
+                .next(revisionFileToDBStepWithoutCommitMsg)
+                .build();
+    }
 
 }

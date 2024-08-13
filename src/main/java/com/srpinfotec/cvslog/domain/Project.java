@@ -22,6 +22,10 @@ public class Project extends BaseTime {
     @Column(name = "PROJECT_NAME", unique = true, nullable = false)
     private String name;
 
+    @Column(name = "USE_YN")
+    @Enumerated(EnumType.STRING)
+    private UseType isUse;
+
     @OneToMany(mappedBy = "project")
     private List<Commit> commits = new ArrayList<>();
 
@@ -30,5 +34,10 @@ public class Project extends BaseTime {
 
     public Project(String name) {
         this.name = name;
+    }
+
+    @PrePersist
+    public void prePersist(){
+        if(this.isUse == null) this.isUse = UseType.USE;
     }
 }

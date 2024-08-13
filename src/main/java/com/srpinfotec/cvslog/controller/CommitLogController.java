@@ -17,7 +17,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,6 +52,18 @@ public class CommitLogController {
 
         return ResponseEntity
                 .ok(ResponseDto.success(commits));
+    }
+
+    @GetMapping("/commit/recent")
+    public ResponseEntity<ResponseDto> recentFetchedCommit(){
+        List<CommitRsDto> recentCommit = commitService.getCommitList(
+                new CommitRqCond(null, null, null, LocalDate.now(), null)
+        );
+
+        Map<String, List<CommitRsDto>> projectCommit = recentCommit.stream().collect(Collectors.groupingBy(CommitRsDto::getProjectName));
+
+        return ResponseEntity
+                .ok(ResponseDto.success(projectCommit));
     }
 
     @GetMapping("/commit/{commitId}/revision")

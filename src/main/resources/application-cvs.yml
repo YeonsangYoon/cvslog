@@ -1,4 +1,4 @@
 cvs:
   root: ${CVSROOT}
-  log-file-path: ${CVSLOGFILE}
+  log-file-path: ${CVSLOGPATH}
   script-dir: ${SCRIPTDIR}

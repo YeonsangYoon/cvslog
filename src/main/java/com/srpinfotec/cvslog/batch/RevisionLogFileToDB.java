@@ -12,6 +12,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.repository.JobRepository;
@@ -106,10 +107,12 @@ public class RevisionLogFileToDB {
 
     @Bean
     @StepScope
-    public FlatFileItemReader<RevisionLogEntry> revisionLogItemReader(){
+    public FlatFileItemReader<RevisionLogEntry> revisionLogItemReader(@Value("#{stepExecution}") StepExecution stepExecution){
+        Long jobExecutionId = stepExecution.getJobExecutionId();
+
         return new FlatFileItemReaderBuilder<RevisionLogEntry>()
                 .name("RevisionLogItemReader")
-                .resource(new FileSystemResource(cvsProperties.getLogFilePath()))
+                .resource(new FileSystemResource(cvsProperties.getLogFilePath(jobExecutionId)))
                 .lineTokenizer(new LineTokenizer() {
                     @Override
                     public FieldSet tokenize(String line) {

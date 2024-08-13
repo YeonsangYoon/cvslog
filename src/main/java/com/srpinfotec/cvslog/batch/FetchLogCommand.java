@@ -44,6 +44,8 @@ public class FetchLogCommand {
         return new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+                Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
+
                 StringBuilder command = new StringBuilder()
                         .append("cvs -d ")
                         .append(cvsProperties.getRoot())
@@ -57,7 +59,7 @@ public class FetchLogCommand {
 
                 command
                         .append(" > ")
-                        .append(cvsProperties.getLogFilePath());
+                        .append(cvsProperties.getLogFilePath(jobExecutionId));
 
                 commandExecutor.execute(command.toString());
 

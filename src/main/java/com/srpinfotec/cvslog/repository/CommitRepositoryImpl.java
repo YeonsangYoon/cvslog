@@ -136,26 +136,36 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
         return commits.stream().map(Commit::toRsDto).toList();
     }
 
+    @Override
+    public List<Commit> findTodayCommit() {
+        return queryFactory
+                .selectFrom(commit)
+                .innerJoin(commit.project, project).fetchJoin()
+                .innerJoin(commit.user, user).fetchJoin()
+                .where(dateGoe(LocalDate.now().minusDays(50)))
+                .fetch();
+    }
+
     /******************************************************************************************
      * 검색 조건
      ******************************************************************************************/
     private BooleanBuilder commitSearchCondition(CommitRqCond cond){
         BooleanBuilder builder = new BooleanBuilder();
 
-        builder.and(projectNameEq(cond.getProject()))
-                .and(userNameEq(cond.getUser()))
+        builder.and(projectIdEq(cond.getProjectId()))
+                .and(userIdEq(cond.getUserId()))
                 .and(dateGoe(cond.getStartDate()))
                 .and(dateLoe(cond.getEndDate()));
 
         return builder;
     }
 
-    private BooleanExpression projectNameEq(String projectName){
-        return hasLength(projectName) ? project.name.equalsIgnoreCase(projectName) : null;
+    private BooleanExpression projectIdEq(Long projectId){
+        return (projectId == null) ? null : project.id.eq(projectId);
     }
 
-    private BooleanExpression userNameEq(String userName){
-        return hasLength(userName) ? user.name.equalsIgnoreCase(userName) : null;
+    private BooleanExpression userIdEq(Long userId){
+        return (userId == null) ? null : user.id.eq(userId);
     }
 
     private BooleanExpression dateGoe(LocalDate startDate){

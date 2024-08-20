@@ -29,8 +29,6 @@ public class UserService {
 
     @Transactional
     public List<UserRsDto> getAllUser(){
-        List<User> users = userRepository.findAll();
-
-        return users.stream().map(user -> new UserRsDto(user.getName())).toList();
+        return userRepository.findAllDtos();
     }
 }

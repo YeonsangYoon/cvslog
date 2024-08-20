@@ -26,7 +26,7 @@ public class SrpController {
     @GetMapping("/condition")
     public ResponseEntity<ResponseDto> searchCondition(){
         SearchConditionRsDto dto = new SearchConditionRsDto(
-                projectService.getAllProject(),
+                projectService.getAllProjectWithTodayCommit(),
                 userService.getAllUser()
         );
 

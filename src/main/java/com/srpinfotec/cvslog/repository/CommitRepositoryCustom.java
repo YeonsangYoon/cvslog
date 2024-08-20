@@ -1,6 +1,7 @@
 package com.srpinfotec.cvslog.repository;
 
 
+import com.srpinfotec.cvslog.domain.Commit;
 import com.srpinfotec.cvslog.dto.request.CommitRqCond;
 import com.srpinfotec.cvslog.dto.response.CommitRsDto;
 
@@ -14,4 +15,6 @@ public interface CommitRepositoryCustom {
     List<CommitRsDto> findCommitDtoWithoutRevision(CommitRqCond cond);
 
     List<CommitRsDto> findCommitDtoWithoutRevisionByPage(CommitRqCond cond);
+
+    List<Commit> findTodayCommit();
 }

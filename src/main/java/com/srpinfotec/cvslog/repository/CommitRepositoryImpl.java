@@ -152,8 +152,8 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
     private BooleanBuilder commitSearchCondition(CommitRqCond cond){
         BooleanBuilder builder = new BooleanBuilder();
 
-        builder.and(projectIdEq(cond.getProjectId()))
-                .and(userIdEq(cond.getUserId()))
+        builder.and(projectIdEq(cond.getProject()))
+                .and(userIdEq(cond.getUser()))
                 .and(dateGoe(cond.getStartDate()))
                 .and(dateLoe(cond.getEndDate()));
 

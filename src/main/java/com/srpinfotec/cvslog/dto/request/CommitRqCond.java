@@ -10,8 +10,8 @@ import java.time.LocalDate;
  */
 @Data
 public class CommitRqCond {
-    private Long projectId; // 프로젝트 id
-    private Long userId;    // 유저 id
+    private Long project;   // 프로젝트 id
+    private Long user;      // 유저 id
     private Long page;      // 페이지
 
     @DateTimeFormat(pattern = "yyyyMMdd")
@@ -23,13 +23,13 @@ public class CommitRqCond {
     }
 
     public CommitRqCond(Long projectId, Long userId) {
-        this.projectId = projectId;
-        this.userId = userId;
+        this.project = projectId;
+        this.user = userId;
     }
 
     public CommitRqCond(Long projectId, Long userId, Long page, LocalDate startDate, LocalDate endDate) {
-        this.projectId = projectId;
-        this.userId = userId;
+        this.project = projectId;
+        this.user = userId;
         this.page = page;
         this.startDate = startDate;
         this.endDate = endDate;

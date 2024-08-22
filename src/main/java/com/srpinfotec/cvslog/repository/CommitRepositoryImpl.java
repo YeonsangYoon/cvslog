@@ -25,7 +25,6 @@ import static com.srpinfotec.cvslog.domain.QProject.project;
 import static com.srpinfotec.cvslog.domain.QRevision.revision;
 import static com.srpinfotec.cvslog.domain.QUser.user;
 import static java.util.stream.Collectors.groupingBy;
-import static org.springframework.util.StringUtils.hasLength;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -142,7 +141,7 @@ public class CommitRepositoryImpl implements CommitRepositoryCustom {
                 .selectFrom(commit)
                 .innerJoin(commit.project, project).fetchJoin()
                 .innerJoin(commit.user, user).fetchJoin()
-                .where(dateGoe(LocalDate.now().minusDays(50)))
+                .where(dateGoe(LocalDate.now()))
                 .fetch();
     }
 

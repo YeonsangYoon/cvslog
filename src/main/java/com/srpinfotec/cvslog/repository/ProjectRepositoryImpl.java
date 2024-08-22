@@ -3,6 +3,7 @@ package com.srpinfotec.cvslog.repository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.srpinfotec.cvslog.domain.Project;
+import com.srpinfotec.cvslog.domain.UseType;
 import com.srpinfotec.cvslog.dto.response.ProjectRsDto;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
                         project.id,
                         project.name))
                 .from(project)
+                .where(project.isUse.eq(UseType.USE))
                 .orderBy(project.name.asc())
                 .fetch();
     }

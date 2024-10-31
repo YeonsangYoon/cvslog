@@ -190,21 +190,19 @@ public class RevisionLogFileToDB {
                     return revision;
                 }
 
-                String command = cvsProperties.getScriptDir() +
-                        "/readlog.sh " +
-                        revision.getFile().getPath() +
-                        "/" +
-                        revision.getFile().getName();
+                // file별 commit log 조회 command(cvs -d $CVSROOT rlog $FILE_PATH | iconv -f EUC-KR -t UTF-8)
+                String command = "cvs -d " +
+                        cvsProperties.getRoot() +
+                        " rlog " +
+                        revision.getFile().getPath() + "/" + revision.getFile().getName() +
+                        " | iconv -f EUC-KR -t UTF-8";
 
-                List<String> logs;
+                // sh Command 실행
                 try{
-                    logs = commandExecutor.executeWithOutput(command);
-                } catch (ShellCommandException e){  // Message 로그 조회 실패 시 processor 넘어감
-                    return revision;
-                }
-
-                // data 추출
-                commit.setCommitMsg(CvsLogUtil.getCommitMessageFromLog(revision.getVersion(), logs.iterator()));
+                    List<String> logs = commandExecutor.executeWithOutput(command);
+                    String commitMessage = CvsLogUtil.getCommitMessageFromLog(revision.getVersion(), logs.iterator());
+                    commit.setCommitMsg(commitMessage);
+                } catch (ShellCommandException ignored){}  // Message 로그 조회 실패 시 processor 넘어감
 
                 return revision;
             }

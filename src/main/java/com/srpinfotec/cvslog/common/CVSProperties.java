@@ -8,12 +8,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CVSProperties {
     private final String root;
     private final String logFilePath;
-    private final String scriptDir;
 
-    public CVSProperties(String root, String workDir, String logFilePath, String scriptDir) {
+    public CVSProperties(String root, String workDir, String logFilePath) {
         this.root = root;
         this.logFilePath = logFilePath;
-        this.scriptDir = scriptDir;
     }
 
     /**

@@ -8,7 +8,7 @@ if [ -z $1 ]; then
 fi
 
 ## 2. 환경 설정 파일 실행 (setenv.sh)
-if [ -e "env.sh" ]; then
+if [ -e "setenv.sh" ]; then
         ./setenv.sh
 fi
 

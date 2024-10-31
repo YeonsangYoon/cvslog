@@ -13,6 +13,8 @@ spring:
 logging:
   level:
     root: info
+  file:
+    path: ${LOGDIR}
 
 server:
   port: ${SERVERPORT}

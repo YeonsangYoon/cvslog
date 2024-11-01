@@ -1,18 +1,14 @@
 package com.srpinfotec.cvslog.service;
 
 import com.srpinfotec.cvslog.config.BatchConfig;
-import com.srpinfotec.cvslog.dto.request.FetchRqCond;
 import com.srpinfotec.cvslog.dto.response.FetchRsDto;
 import com.srpinfotec.cvslog.error.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,14 +33,6 @@ public class FetchService {
             batchConfig.runFetchCvsLogWithoutCommitMsg();
 
         } catch (Exception e) {
-            throw new CustomException("job 실행 에러");
-        }
-    }
-
-    public void fetchCommitMessage(){
-        try{
-            batchConfig.runFetchCommitMessage();
-        } catch (Exception e){
             throw new CustomException("job 실행 에러");
         }
     }

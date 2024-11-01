@@ -9,7 +9,7 @@ fi
 
 ## 2. 환경 설정 파일 실행 (setenv.sh)
 if [ -e "setenv.sh" ]; then
-        ./setenv.sh
+        . "./setenv.sh"
 fi
 
 ## 3. Spring 운영환경 설정

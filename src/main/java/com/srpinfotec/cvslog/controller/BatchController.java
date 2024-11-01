@@ -1,17 +1,14 @@
 package com.srpinfotec.cvslog.controller;
 
 import com.srpinfotec.cvslog.dto.ResponseDto;
-import com.srpinfotec.cvslog.dto.request.FetchRqCond;
 import com.srpinfotec.cvslog.dto.response.FetchRsDto;
 import com.srpinfotec.cvslog.service.FetchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,14 +27,6 @@ public class BatchController {
     @PostMapping("/fetch/all")
     public ResponseEntity<ResponseDto> fetchAllLog(){
         fetchService.fetchAll();
-
-        return ResponseEntity
-                .ok(ResponseDto.success(null));
-    }
-
-    @PostMapping("/fetch/commit")
-    public ResponseEntity<ResponseDto> fetchCommitMessage(){
-        fetchService.fetchCommitMessage();
 
         return ResponseEntity
                 .ok(ResponseDto.success(null));

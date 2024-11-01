@@ -31,7 +31,6 @@ public class BatchConfig {
 
     private final Job fetchCvsLogJob;
     private final Job fetchCvsLogJobWithoutCommitMsg;
-    private final Job fetchCommitMessageJob;
 
     @Bean
     public static BeanDefinitionRegistryPostProcessor jobRegistryBeanPostProcessorRemover() {
@@ -73,16 +72,6 @@ public class BatchConfig {
                 .toJobParameters();
 
         jobLauncher.run(fetchCvsLogJobWithoutCommitMsg, jobParameters);
-    }
-
-    @Async
-    public void runFetchCommitMessage() throws Exception {
-        JobParameters jobParameters = new JobParametersBuilder()
-                .addLocalDateTime("fetchCommitMessageJob", LocalDateTime.now())
-                .addLong("chunkSize", 50L)
-                .toJobParameters();
-
-        jobLauncher.run(fetchCommitMessageJob, jobParameters);
     }
 
     /********************************************************************************

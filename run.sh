@@ -7,16 +7,19 @@ if [ -z $1 ]; then
         exit
 fi
 
-## 2. 환경 설정 파일 실행 (setenv.sh)
+## 2. script가 위치한 디렉토리로 이동
+cd "$(dirname "$0")" || exit 1
+
+## 3. 환경 설정 파일 실행 (setenv.sh)
 if [ -e "setenv.sh" ]; then
         . "./setenv.sh"
 fi
 
-## 3. Spring 운영환경 설정
+## 4. Spring 운영환경 설정
 JAR_FILE=cvslog-0.0.1.jar
 JAVA_OPT="-Xmx256m -Xmx256m -Dspring.profiles.active=prod "$JAVA_OPT
 
-## 4. 프로그램 실행
+## 5. 프로그램 실행
 start() {
         echo "start application"
         nohup java $JAVA_OPT -jar $JAR_FILE > /dev/null 2> /dev/null &

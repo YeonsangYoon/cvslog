@@ -28,11 +28,14 @@ public class FetchLogCommand {
     private final CommandExecutor commandExecutor;
     private final CVSProperties cvsProperties;
 
+    /**
+     * CVS log Fetch 결과를 cvs_fetch_{jobExecutionId}.log로 기록
+     */
     @Bean
     @JobScope
     public Step fetchLogCommandStep(JobRepository jr,
-                                PlatformTransactionManager ptm,
-                                Tasklet fetchLogCommandTasklet){
+                                    PlatformTransactionManager ptm,
+                                    Tasklet fetchLogCommandTasklet){
         return new StepBuilder("FetchLogCommandStep", jr)
                 .tasklet(fetchLogCommandTasklet, ptm)
                 .build();
@@ -62,6 +65,37 @@ public class FetchLogCommand {
                         .append(cvsProperties.getLogFilePath(jobExecutionId));
 
                 commandExecutor.execute(command.toString());
+
+                return RepeatStatus.FINISHED;
+            }
+        };
+    }
+
+    /**
+     * Fetch 결과 log file 삭제 Step
+     *  - Tasklet 기반
+     */
+    @Bean
+    @JobScope
+    public Step deleteFetchLogFileStep(JobRepository jr,
+                                       PlatformTransactionManager ptm,
+                                       Tasklet deleteFetchLogFIleTasklet) {
+        return new StepBuilder("DeleteFetchLogFileStep", jr)
+                .tasklet(deleteFetchLogFIleTasklet, ptm)
+                .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet deleteFetchLogFIleTasklet() {
+        return new Tasklet() {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+                Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
+
+                String rmCommand = "rm -f " + cvsProperties.getLogFilePath(jobExecutionId);
+
+                commandExecutor.execute(rmCommand);
 
                 return RepeatStatus.FINISHED;
             }

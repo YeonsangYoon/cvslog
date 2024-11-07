@@ -29,13 +29,15 @@ public class FetchCvsLogBatch {
     @Bean
     public Job fetchCvsLogJob(JobRepository jr, PlatformTransactionManager ptm,
                               Step fetchLogCommandStep,
-                              Step revisionFileToDBStep
+                              Step revisionFileToDBStep,
+                              Step deleteFetchLogFileStep
                               ){
 
         return new JobBuilder("FetchCvsLogJob", jr)
                 .incrementer(new RunIdIncrementer())
                 .start(fetchLogCommandStep)
                 .next(revisionFileToDBStep)
+                .next(deleteFetchLogFileStep)
                 .build();
     }
 
@@ -45,14 +47,16 @@ public class FetchCvsLogBatch {
      */
     @Bean
     public Job fetchCvsLogJobWithoutCommitMsg(JobRepository jr, PlatformTransactionManager ptm,
-                                 Step fetchLogCommandStep,
-                                 Step revisionFileToDBStepWithoutCommitMsg
+                                              Step fetchLogCommandStep,
+                                              Step revisionFileToDBStepWithoutCommitMsg,
+                                              Step deleteFetchLogFileStep
     ){
 
         return new JobBuilder("FetchCvsLogJobWithoutCommitMsg", jr)
                 .incrementer(new RunIdIncrementer())
                 .start(fetchLogCommandStep)
                 .next(revisionFileToDBStepWithoutCommitMsg)
+                .next(deleteFetchLogFileStep)
                 .build();
     }
 

@@ -1,3 +1,0 @@
-cvs:
-  root: ${CVSROOT}
-  log-file-path: ${CVSLOGPATH}

@@ -2,11 +2,11 @@ bootJar.enabled = true
 jar.enabled = true
 
 dependencies {
-    implementation project(':domain')
+    implementation project(':core')
 
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 

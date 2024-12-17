@@ -2,7 +2,7 @@ bootJar.enabled = true
 jar.enabled = true
 
 dependencies {
-    implementation project(':domain')
+    implementation project(':core')
 
     implementation 'org.springframework.boot:spring-boot-starter-batch'
     implementation 'org.springframework.boot:spring-boot-starter-quartz'

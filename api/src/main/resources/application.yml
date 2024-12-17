@@ -1,3 +1,38 @@
 spring:
   application:
     name: api
+
+  profiles:
+    active: local
+    include:
+      - core
+
+---
+spring.config.activate.on-profile: local
+server:
+  port: 8081
+
+logging:
+  level:
+    root: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+
+---
+spring.config.activate.on-profile: prod
+server:
+  port: ${CL_SERVER_PORT}
+
+logging:
+  level:
+    root: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus

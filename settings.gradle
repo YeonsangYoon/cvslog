@@ -1,5 +1,5 @@
 rootProject.name = 'cvslog'
 
-include 'domain'
+include 'core'
 include 'api'
 include 'batch'

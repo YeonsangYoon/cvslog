@@ -12,7 +12,7 @@ spring:
     password: 1416
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
         default_batch_fetch_size: 300

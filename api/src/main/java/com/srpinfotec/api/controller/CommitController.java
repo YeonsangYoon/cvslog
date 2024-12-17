@@ -1,6 +1,6 @@
 package com.srpinfotec.api.controller;
 
-import com.srpinfotec.api.dto.ResponseDto;
+import com.srpinfotec.api.dto.ApiResponse;
 import com.srpinfotec.api.dto.request.CommitRqCond;
 import com.srpinfotec.api.dto.response.CommitRsDto;
 import com.srpinfotec.api.dto.response.RevisionRsDto;
@@ -28,18 +28,18 @@ public class CommitController {
      * Commit 리스트 조회
      */
     @GetMapping("/commit")
-    public ResponseEntity<ResponseDto> commitListByProject(@ModelAttribute CommitRqCond cond){
+    public ResponseEntity<ApiResponse> commitListByProject(@ModelAttribute CommitRqCond cond){
         List<CommitRsDto> commits = commitService.getCommitList(cond);
 
         return ResponseEntity
-                .ok(ResponseDto.success(commits));
+                .ok(ApiResponse.success(commits));
     }
 
     /**
      * 최근 Commit 로그 조회
      */
     @GetMapping("/commit/recent")
-    public ResponseEntity<ResponseDto> recentFetchedCommit(){
+    public ResponseEntity<ApiResponse> recentFetchedCommit(){
         List<CommitRsDto> recentCommit = commitService.getCommitList(
                 CommitRqCond.builder()
                         .startDate(LocalDate.now())
@@ -49,14 +49,14 @@ public class CommitController {
         Map<String, List<CommitRsDto>> projectCommit = recentCommit.stream().collect(Collectors.groupingBy(CommitRsDto::getProjectName));
 
         return ResponseEntity
-                .ok(ResponseDto.success(projectCommit));
+                .ok(ApiResponse.success(projectCommit));
     }
 
     @GetMapping("/commit/{commitId}/revision")
-    public ResponseEntity<ResponseDto> revisionListByCommitId(@PathVariable Long commitId){
+    public ResponseEntity<ApiResponse> revisionListByCommitId(@PathVariable Long commitId){
         List<RevisionRsDto> revisions = revisionService.getRevisionByCommit(commitId);
 
         return ResponseEntity
-                .ok(ResponseDto.success(revisions));
+                .ok(ApiResponse.success(revisions));
     }
 }

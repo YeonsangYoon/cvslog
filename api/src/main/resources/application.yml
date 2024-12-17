@@ -7,6 +7,9 @@ spring:
     include:
       - core
 
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
 ---
 spring.config.activate.on-profile: local
 server:
@@ -25,7 +28,7 @@ management:
 ---
 spring.config.activate.on-profile: prod
 server:
-  port: ${CL_SERVER_PORT}
+  port: ${CL_API_SERVER_PORT}
 
 logging:
   level:

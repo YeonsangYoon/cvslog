@@ -1,1 +1,5 @@
 rootProject.name = 'cvslog'
+
+include 'core'
+include 'api'
+include 'batch'

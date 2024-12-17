@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: domain
+
+---
+spring.config.activate.on-profile: local
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cvsloglocal?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 1416
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_batch_fetch_size: 300
+        show_sql: true
+        format_sql: true
+
+---
+spring.config.activate.on-profile: prod
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${CL_DB_URL}
+    username: ${CL_DB_USERNAME}
+    password: ${CL_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_batch_fetch_size: 300
+        show_sql: false
+        format_sql: false

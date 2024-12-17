@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: batch
+  profiles:
+    active: local
+    include:
+      - cvs
+      - core
+
+---
+spring.config.activate.on-profile: local
+spring:
+  batch:
+    jdbc:
+      initialize-schema: always
+
+    job:
+      name: ${job.name=NONE}
+      enabled: false
+server:
+  port: 8082
+
+---
+spring.config.activate.on-profile: prod
+spring:
+  batch:
+    jdbc:
+      initialize-schema: never
+
+    job:
+      enabled: false
+      name: ${job.name:NONE}
+server:
+  port: ${CL_BATCH_SERVER_PORT}

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,12 +34,11 @@ public class ProjectService {
         List<ProjectRsDto> allDtos = projectQueryRepository.findAllDtos();
         List<Commit> todayCommit = commitQueryRepository.findTodayCommit();
 
-        Map<Long, Integer> projectTodayCommitCount
-                = allDtos.stream().collect(Collectors.toMap(ProjectRsDto::getProjectId, projectRsDto -> 0));
+        Map<Long, Integer> projectTodayCommitCount = new HashMap<>();
 
         todayCommit.forEach(commit -> {
             Long proejctId = commit.getProject().getId();
-            projectTodayCommitCount.put(proejctId, projectTodayCommitCount.get(proejctId) + 1);
+            projectTodayCommitCount.put(proejctId, projectTodayCommitCount.getOrDefault(proejctId, 0) + 1);
         });
 
         allDtos.forEach(projectRsDto -> {

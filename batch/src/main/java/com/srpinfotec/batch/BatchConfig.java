@@ -17,7 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
@@ -78,7 +77,7 @@ public class BatchConfig {
      * Batch Job Scheduler
      ********************************************************************************/
 
-    @Scheduled(cron = "0 0/10 * * * ?")
+//    @Scheduled(cron = "0 0/10 * * * ?") => 스케줄링 제거(webhook 방식을 변경)
     public void dailyCvsLogScheduler() throws Exception{
         runDailyFetchCvsLog();
     }

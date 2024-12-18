@@ -6,6 +6,8 @@ spring:
     include:
       - cvs
       - core
+  jackson:
+    property-naming-strategy: SNAKE_CASE
 
 ---
 spring.config.activate.on-profile: local

@@ -42,7 +42,7 @@ public class ProjectService {
         });
 
         allDtos.forEach(projectRsDto -> {
-            int count = projectTodayCommitCount.get(projectRsDto.getProjectId());
+            int count = projectTodayCommitCount.getOrDefault(projectRsDto.getProjectId(), 0);
 
             if(count > 0){
                 projectRsDto.addCommitCountToName(count);

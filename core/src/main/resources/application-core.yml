@@ -11,6 +11,7 @@ spring:
     username: root
     password: 1416
   jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: update
       naming:
@@ -30,6 +31,7 @@ spring:
     username: ${CL_DB_USERNAME}
     password: ${CL_DB_PASSWORD}
   jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: none
       naming:

@@ -6,8 +6,8 @@ spring:
 spring.config.activate.on-profile: local
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/cvsloglocal?useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3307/cvslog
     username: root
     password: 1416
   jpa:

@@ -25,7 +25,7 @@ spring:
 spring.config.activate.on-profile: prod
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.mariadb.jdbc.Driver
     url: ${CL_DB_URL}
     username: ${CL_DB_USERNAME}
     password: ${CL_DB_PASSWORD}

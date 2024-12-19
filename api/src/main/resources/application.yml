@@ -27,6 +27,11 @@ management:
 
 ---
 spring.config.activate.on-profile: prod
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+
 server:
   port: ${CL_API_SERVER_PORT}
 

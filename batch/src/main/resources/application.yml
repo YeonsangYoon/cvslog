@@ -25,6 +25,10 @@ server:
 ---
 spring.config.activate.on-profile: prod
 spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 4
+
   batch:
     jdbc:
       initialize-schema: never

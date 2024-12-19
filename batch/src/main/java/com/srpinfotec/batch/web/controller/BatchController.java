@@ -2,7 +2,7 @@ package com.srpinfotec.batch.web.controller;
 
 import com.srpinfotec.batch.web.dto.response.FetchRsDto;
 import com.srpinfotec.batch.web.dto.ApiResponse;
-import com.srpinfotec.batch.web.service.FetchService;
+import com.srpinfotec.batch.service.FetchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

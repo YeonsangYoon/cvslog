@@ -1,4 +1,4 @@
-package com.srpinfotec.batch.web.service;
+package com.srpinfotec.batch.service;
 
 import com.srpinfotec.batch.BatchConfig;
 import com.srpinfotec.batch.web.dto.response.FetchRsDto;

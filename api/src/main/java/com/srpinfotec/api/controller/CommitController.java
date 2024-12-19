@@ -7,6 +7,8 @@ import com.srpinfotec.api.dto.response.RevisionRsDto;
 import com.srpinfotec.api.service.CommitService;
 import com.srpinfotec.api.service.RevisionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class CommitController {
@@ -29,6 +32,8 @@ public class CommitController {
      */
     @GetMapping("/commit")
     public ResponseEntity<ApiResponse> commitListByProject(@ModelAttribute CommitRqCond cond){
+        log.info("[{}] {}", MDC.get("request_id"), cond.toString());
+
         List<CommitRsDto> commits = commitService.getCommitList(cond);
 
         return ResponseEntity
@@ -52,7 +57,7 @@ public class CommitController {
                 .ok(ApiResponse.success(projectCommit));
     }
 
-    @GetMapping("/commit/{commitId}/revision")
+    @GetMapping("/commit/{commitId}")
     public ResponseEntity<ApiResponse> revisionListByCommitId(@PathVariable Long commitId){
         List<RevisionRsDto> revisions = revisionService.getRevisionByCommit(commitId);
 

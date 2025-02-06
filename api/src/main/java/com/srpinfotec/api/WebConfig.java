@@ -29,7 +29,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://srp.srpinfotec.com",
                         "https://srp.srpinfotec.com:8082",
-                        "https://sr.srpinfotec.com:18082"
+                        "https://sr.srpinfotec.com:18082",
+                        "http://localhost:8106"
                 );
     }
 
@@ -74,7 +75,7 @@ public class WebConfig implements WebMvcConfigurer {
                 int status = response.getStatus();
                 long elapsedTime = System.currentTimeMillis() - startTime;
 
-                if(!whiteList.contains(uri)){
+                if(!whiteList.contains(uri) && !method.equalsIgnoreCase("OPTIONS")){
                     log.info("[{}] [{}] [{}] [{}] [{}] - [{}] {}ms", userId, requestId, ip, method, uri, status, elapsedTime);
                 }
 

@@ -60,12 +60,14 @@ public class WebConfig implements WebMvcConfigurer {
 
                 // Request Id 등록
                 String requestId = HttpUtil.getRequestId();
+
                 MDC.put("request_id", requestId);
 
                 // Request Logging
                 String uri = request.getRequestURI();
                 String ip = HttpUtil.getRequestIp();
                 String method = request.getMethod();
+                String userId = request.getHeader("X-SRP-User-Id");
 
                 chain.doFilter(requestWrapper, response);
 
@@ -73,7 +75,7 @@ public class WebConfig implements WebMvcConfigurer {
                 long elapsedTime = System.currentTimeMillis() - startTime;
 
                 if(!whiteList.contains(uri)){
-                    log.info("[{}] [{}] [{}] [{}] - [{}] {}ms", requestId, ip, method, uri, status, elapsedTime);
+                    log.info("[{}] [{}] [{}] [{}] [{}] - [{}] {}ms", userId, requestId, ip, method, uri, status, elapsedTime);
                 }
 
                 MDC.clear();

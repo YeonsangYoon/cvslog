@@ -151,21 +151,16 @@ public class RevisionLogFileToDB {
             @Override
             public Revision process(RevisionLogEntry logEntry) throws Exception {
                 Project project = projectRepository.findByNaturalId(logEntry.getProjectName())
-                        .orElseGet(() -> new Project(logEntry.getProjectName()));
+                        .orElseGet(() -> entityManager.merge(new Project(logEntry.getProjectName())));
 
                 User user = userRepository.findByNaturalId(logEntry.getUsername())
-                        .orElseGet(() -> new User(logEntry.getUsername()));
+                        .orElseGet(() -> entityManager.merge(new User(logEntry.getUsername())));
 
                 File file = fileRepository.findByLog(logEntry.getFilename(), logEntry.getFilepath(), logEntry.getProjectName())
-                        .orElseGet(() -> new File(logEntry.getFilename(), logEntry.getFilepath(), project));
+                        .orElseGet(() -> entityManager.merge(new File(logEntry.getFilename(), logEntry.getFilepath(), project)));
 
                 Commit commit = commitRepository.findByRevision(logEntry.getDate(), logEntry.getProjectName(), logEntry.getUsername())
-                        .orElseGet(() -> new Commit(logEntry.getDate(), project, user));
-
-                entityManager.persist(project);
-                entityManager.persist(user);
-                entityManager.persist(file);
-                entityManager.persist(commit);
+                        .orElseGet(() -> entityManager.merge(new Commit(logEntry.getDate(), project, user)));
 
                 return new Revision(
                         logEntry.getType(),

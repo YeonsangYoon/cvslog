@@ -37,6 +37,14 @@ public class FetchService {
         }
     }
 
+    public void fetchRecent4Month() {
+        try {
+            batchConfig.runRecent4MonthFetchCvsLog();
+        } catch (Exception e) {
+            throw new BatchException("job 실행 에러");
+        }
+    }
+
 
     /**
      * JobExecution을 FetchDto로 변환

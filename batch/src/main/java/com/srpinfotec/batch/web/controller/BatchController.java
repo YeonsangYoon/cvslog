@@ -37,6 +37,14 @@ public class BatchController {
                 .ok(ApiResponse.success(null));
     }
 
+    @PostMapping("/fetch/recent")
+    public ResponseEntity<ApiResponse> fetchRecentLog(){
+        fetchService.fetchRecent4Month();
+
+        return ResponseEntity
+                .ok(ApiResponse.success(null));
+    }
+
     /**
      * 최근 fetch 기록 반환
      */

@@ -66,7 +66,7 @@ public class RevisionLogFileToDB {
                                      ItemWriter<Revision> revisionItemWriter,
                                      SkipPolicy parseLogSkipPolicy,
                                      @Value("#{jobParameters['chunkSize']}") Long chunkSize
-    ){
+    ) {
         return new StepBuilder("RevisionFileToDBStep", jr)
                 .<RevisionLogEntry, Revision>chunk(chunkSize.intValue(), ptm)
                 .reader(revisionLogItemReader)
@@ -84,14 +84,14 @@ public class RevisionLogFileToDB {
     @Bean
     @JobScope
     public Step revisionFileToDBStepWithoutCommitMsg(JobRepository jr,
-                                           PlatformTransactionManager ptm,
-                                           ItemReader<RevisionLogEntry> revisionLogItemReader,
-                                           ItemProcessor<RevisionLogEntry, RevisionLogEntry> duplicationCheckItemProcessor,
-                                           ItemProcessor<RevisionLogEntry, Revision> dtoToEntityItemProcessor,
-                                           ItemWriter<Revision> revisionItemWriter,
-                                           SkipPolicy parseLogSkipPolicy,
-                                           @Value("#{jobParameters['chunkSize']}") Long chuckSize
-    ){
+                                                     PlatformTransactionManager ptm,
+                                                     ItemReader<RevisionLogEntry> revisionLogItemReader,
+                                                     ItemProcessor<RevisionLogEntry, RevisionLogEntry> duplicationCheckItemProcessor,
+                                                     ItemProcessor<RevisionLogEntry, Revision> dtoToEntityItemProcessor,
+                                                     ItemWriter<Revision> revisionItemWriter,
+                                                     SkipPolicy parseLogSkipPolicy,
+                                                     @Value("#{jobParameters['chunkSize']}") Long chuckSize
+    ) {
         return new StepBuilder("RevisionFileToDBStepWithoutCommitMsg", jr)
                 .<RevisionLogEntry, Revision>chunk(chuckSize.intValue(), ptm)
                 .reader(revisionLogItemReader)
@@ -107,7 +107,7 @@ public class RevisionLogFileToDB {
 
     @Bean
     @StepScope
-    public FlatFileItemReader<RevisionLogEntry> revisionLogItemReader(@Value("#{stepExecution}") StepExecution stepExecution){
+    public FlatFileItemReader<RevisionLogEntry> revisionLogItemReader(@Value("#{stepExecution}") StepExecution stepExecution) {
         Long jobExecutionId = stepExecution.getJobExecutionId();
 
         return new FlatFileItemReaderBuilder<RevisionLogEntry>()
@@ -131,11 +131,11 @@ public class RevisionLogFileToDB {
 
     @Bean
     @StepScope
-    public ItemProcessor<RevisionLogEntry, RevisionLogEntry> duplicationCheckItemProcessor(){
+    public ItemProcessor<RevisionLogEntry, RevisionLogEntry> duplicationCheckItemProcessor() {
         return new ItemProcessor<RevisionLogEntry, RevisionLogEntry>() {
             @Override
             public RevisionLogEntry process(RevisionLogEntry logEntry) throws Exception {
-                if(logEntry == null) return null;
+                if (logEntry == null) return null;
 
                 Optional<Revision> byLog = revisionRepository.findByLog(logEntry.getFilename(), logEntry.getFilepath(), logEntry.getVersion());
 
@@ -146,21 +146,37 @@ public class RevisionLogFileToDB {
 
     @Bean
     @StepScope
-    public ItemProcessor<RevisionLogEntry, Revision> dtoToEntityItemProcessor(){
+    public ItemProcessor<RevisionLogEntry, Revision> dtoToEntityItemProcessor() {
         return new ItemProcessor<RevisionLogEntry, Revision>() {
             @Override
             public Revision process(RevisionLogEntry logEntry) throws Exception {
                 Project project = projectRepository.findByNaturalId(logEntry.getProjectName())
-                        .orElseGet(() -> entityManager.merge(new Project(logEntry.getProjectName())));
+                        .orElseGet(() -> {
+                            Project newProject = new Project(logEntry.getProjectName());
+                            entityManager.persist(newProject);
+                            return newProject;
+                        });
 
                 User user = userRepository.findByNaturalId(logEntry.getUsername())
-                        .orElseGet(() -> entityManager.merge(new User(logEntry.getUsername())));
+                        .orElseGet(() -> {
+                            User newUser = new User(logEntry.getUsername());
+                            entityManager.persist(newUser);
+                            return newUser;
+                        });
 
                 File file = fileRepository.findByLog(logEntry.getFilename(), logEntry.getFilepath(), logEntry.getProjectName())
-                        .orElseGet(() -> entityManager.merge(new File(logEntry.getFilename(), logEntry.getFilepath(), project)));
+                        .orElseGet(() -> {
+                            File newFile = new File(logEntry.getFilename(), logEntry.getFilepath(), project);
+                            entityManager.persist(newFile);
+                            return newFile;
+                        });
 
                 Commit commit = commitRepository.findByRevision(logEntry.getDate(), logEntry.getProjectName(), logEntry.getUsername())
-                        .orElseGet(() -> entityManager.merge(new Commit(logEntry.getDate(), project, user)));
+                        .orElseGet(() -> {
+                            Commit newCommit = new Commit(logEntry.getDate(), project, user);
+                            entityManager.persist(newCommit);
+                            return newCommit;
+                        });
 
                 return new Revision(
                         logEntry.getType(),
@@ -174,14 +190,14 @@ public class RevisionLogFileToDB {
 
     @Bean
     @StepScope
-    public ItemProcessor<Revision, Revision> commitMessageItemProcessor(){
+    public ItemProcessor<Revision, Revision> commitMessageItemProcessor() {
         return new ItemProcessor<Revision, Revision>() {
             @Override
             public Revision process(Revision revision) throws Exception {
                 Commit commit = revision.getCommit();
 
                 // Commit Message 유무 확인
-                if(StringUtils.hasLength(commit.getCommitMsg())){
+                if (StringUtils.hasLength(commit.getCommitMsg())) {
                     return revision;
                 }
 
@@ -193,11 +209,12 @@ public class RevisionLogFileToDB {
                         " | iconv -f EUC-KR -t UTF-8";
 
                 // sh Command 실행
-                try{
+                try {
                     List<String> logs = commandExecutor.executeWithOutput(command);
                     String commitMessage = CvsLogUtil.getCommitMessageFromLog(revision.getVersion(), logs.iterator());
                     commit.setCommitMsg(commitMessage);
-                } catch (ShellCommandException ignored){}  // Message 로그 조회 실패 시 processor 넘어감
+                } catch (ShellCommandException ignored) {
+                }  // Message 로그 조회 실패 시 processor 넘어감
 
                 return revision;
             }
@@ -206,7 +223,7 @@ public class RevisionLogFileToDB {
 
     @Bean
     @StepScope
-    public ItemWriter<Revision> revisionLogItemWriter(){
+    public ItemWriter<Revision> revisionLogItemWriter() {
         return new ItemWriter<Revision>() {
             @Override
             public void write(Chunk<? extends Revision> chunk) throws Exception {
@@ -217,7 +234,7 @@ public class RevisionLogFileToDB {
     }
 
     @Bean
-    public SkipPolicy parseLogSkipPolicy(){
+    public SkipPolicy parseLogSkipPolicy() {
         return new SkipPolicy() {
             @Override
             public boolean shouldSkip(Throwable t, long skipCount) throws SkipLimitExceededException {

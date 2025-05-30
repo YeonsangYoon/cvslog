@@ -1,7 +1,7 @@
 package com.srpinfotec.batch.service;
 
 import com.srpinfotec.batch.BatchConfig;
-import com.srpinfotec.batch.web.dto.response.FetchRsDto;
+import com.srpinfotec.batch.web.response.FetchRsDto;
 import com.srpinfotec.batch.exception.BatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
@@ -9,6 +9,7 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +17,18 @@ public class FetchService {
     private final JobExplorer jobExplorer;
     private final BatchConfig batchConfig;
 
-    public FetchRsDto fetch(){
+    public FetchRsDto manualFetch(){
+        // 중복 실행 방지
+        List<JobInstance> instances = jobExplorer.getJobInstances("FetchCvsLogJob", 0, 10);
+
+        instances.forEach(jobInstance -> {
+            jobExplorer.getJobExecutions(jobInstance).forEach(jobExecution -> {
+                if(jobExecution.isRunning()) {
+                    throw new BatchException("이미 fetch 실행중.");
+                }
+            });
+        });
+
         try {
             JobExecution jobExecution = batchConfig.runDailyFetchCvsLog();
 
@@ -37,9 +49,10 @@ public class FetchService {
         }
     }
 
-    public void fetchRecent4Month() {
+    public FetchRsDto fetchRecentMonth(int month) {
         try {
-            batchConfig.runRecent4MonthFetchCvsLog();
+            JobExecution jobExecution = batchConfig.runRecentMonthFetchCvsLog(month);
+            return fetchJobExecutionToDto(jobExecution);
         } catch (Exception e) {
             throw new BatchException("job 실행 에러");
         }
@@ -49,7 +62,7 @@ public class FetchService {
     /**
      * JobExecution을 FetchDto로 변환
      */
-    private FetchRsDto fetchJobExecutionToDto(JobExecution jobExecution){
+    public FetchRsDto fetchJobExecutionToDto(JobExecution jobExecution){
         if(jobExecution == null){
             return null;
         }

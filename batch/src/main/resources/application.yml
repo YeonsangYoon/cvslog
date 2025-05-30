@@ -6,6 +6,7 @@ spring:
     include:
       - cvs
       - core
+      - slack
   jackson:
     property-naming-strategy: SNAKE_CASE
 

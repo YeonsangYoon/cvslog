@@ -9,6 +9,7 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +17,18 @@ public class FetchService {
     private final JobExplorer jobExplorer;
     private final BatchConfig batchConfig;
 
-    public FetchRsDto fetch(){
+    public FetchRsDto manualFetch(){
+        // 중복 실행 방지
+        List<JobInstance> instances = jobExplorer.getJobInstances("FetchCvsLogJob", 0, 10);
+
+        instances.forEach(jobInstance -> {
+            jobExplorer.getJobExecutions(jobInstance).forEach(jobExecution -> {
+                if(jobExecution.isRunning()) {
+                    throw new BatchException("이미 fetch 실행중.");
+                }
+            });
+        });
+
         try {
             JobExecution jobExecution = batchConfig.runDailyFetchCvsLog();
 
@@ -50,7 +62,7 @@ public class FetchService {
     /**
      * JobExecution을 FetchDto로 변환
      */
-    private FetchRsDto fetchJobExecutionToDto(JobExecution jobExecution){
+    public FetchRsDto fetchJobExecutionToDto(JobExecution jobExecution){
         if(jobExecution == null){
             return null;
         }

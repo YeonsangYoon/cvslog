@@ -5,6 +5,7 @@ import com.srpinfotec.core.value.RevisionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * CVS Commit Log의 내용에 대한 객체
  */
+@Slf4j
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,15 +31,16 @@ public class RevisionLogEntry {
     /**
      * Commit History log 한줄을 parsing 하여 Revision 객체로 변환
      * TODO 유효성 검사 추가
-     * @param log 로그
+     * @param logMessage 로그
      * @return RevisionLogEntry
      */
-    public static RevisionLogEntry parseLog(String log){
+    public static RevisionLogEntry parseLog(String logMessage){
         RevisionLogEntry entry = new RevisionLogEntry();
 
-        String[] data = log.split("\\s+");  // log 정보
+        String[] data = logMessage.split("\\s+");  // log 정보
 
         if(data.length != 10){
+            log.error("Commit log parse error : {}", logMessage);
             throw new BatchException("Revision Log 형식 오류(split 개수 차이)");
         }
 

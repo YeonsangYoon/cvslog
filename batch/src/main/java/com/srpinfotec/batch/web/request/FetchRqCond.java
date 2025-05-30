@@ -1,7 +1,6 @@
-package com.srpinfotec.batch.web.dto.request;
+package com.srpinfotec.batch.web.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.Data;
 
 import java.time.LocalDate;

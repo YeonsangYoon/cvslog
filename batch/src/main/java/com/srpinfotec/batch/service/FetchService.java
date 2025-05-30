@@ -1,7 +1,7 @@
 package com.srpinfotec.batch.service;
 
 import com.srpinfotec.batch.BatchConfig;
-import com.srpinfotec.batch.web.dto.response.FetchRsDto;
+import com.srpinfotec.batch.web.response.FetchRsDto;
 import com.srpinfotec.batch.exception.BatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
@@ -37,9 +37,10 @@ public class FetchService {
         }
     }
 
-    public void fetchRecent4Month() {
+    public FetchRsDto fetchRecentMonth(int month) {
         try {
-            batchConfig.runRecent4MonthFetchCvsLog();
+            JobExecution jobExecution = batchConfig.runRecentMonthFetchCvsLog(month);
+            return fetchJobExecutionToDto(jobExecution);
         } catch (Exception e) {
             throw new BatchException("job 실행 에러");
         }

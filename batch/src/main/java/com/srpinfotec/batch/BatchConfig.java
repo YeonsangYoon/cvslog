@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.boot.autoconfigure.batch.JobLauncherApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cglib.core.Local;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
@@ -54,10 +53,10 @@ public class BatchConfig {
         return runner;
     }
 
-    public JobExecution runRecent4MonthFetchCvsLog() throws Exception {
+    public JobExecution runRecentMonthFetchCvsLog(int month) throws Exception {
         JobParameters jobParameters = new JobParametersBuilder()
                 .addLocalDateTime("FetchCvsLogJob", LocalDateTime.now())
-                .addLocalDate("basedate", LocalDate.now().minusMonths(4))
+                .addLocalDate("basedate", LocalDate.now().minusMonths(month))
                 .addLong("chunkSize", 10L)
                 .toJobParameters();
 

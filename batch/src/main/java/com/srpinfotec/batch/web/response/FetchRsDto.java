@@ -1,4 +1,4 @@
-package com.srpinfotec.batch.web.dto.response;
+package com.srpinfotec.batch.web.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

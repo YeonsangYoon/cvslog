@@ -38,7 +38,7 @@ public class BatchController {
                 .ok(ApiResponse.success(result));
     }
 
-    @PostMapping("/fetch-auto")
+    @PostMapping("/fetch/auto")
     public ResponseEntity<?> fetchByAutoWebhook() {
         log.info("fetch by auto webhook");
         publisher.publishEvent(new AutoFetchEvent());

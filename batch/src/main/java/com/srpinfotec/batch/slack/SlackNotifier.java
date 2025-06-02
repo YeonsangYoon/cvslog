@@ -22,9 +22,9 @@ public class SlackNotifier {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
-    public void sendMessage(String message) {
+    public void sendMessage(SlackMessage message) {
         try {
-            String payload = objectMapper.writeValueAsString(new SlackMessage(message));
+            String payload = objectMapper.writeValueAsString(message);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

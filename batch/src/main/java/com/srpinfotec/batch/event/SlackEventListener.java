@@ -15,9 +15,8 @@ public class SlackEventListener {
 
     @Async("SlackEventExecutor")
     @EventListener
-    public void handleFetchEvent(SlackEvent event){
+    public void handleFetchEvent(SlackEvent event) {
         log.info("send slack message");
-
         slackNotifier.sendMessage(event.message());
     }
 }

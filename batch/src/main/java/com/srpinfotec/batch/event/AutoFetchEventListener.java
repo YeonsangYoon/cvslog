@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -27,6 +28,7 @@ public class AutoFetchEventListener {
     private final EntityManager entityManager;
 
     @Async("AutoFetchEventExecutor")
+    @Transactional
     @EventListener
     public void handleFetchEvent(AutoFetchEvent event) {
         log.info("Fetch Event execute");

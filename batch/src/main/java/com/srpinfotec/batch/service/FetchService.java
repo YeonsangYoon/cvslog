@@ -12,6 +12,8 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 
@@ -112,12 +114,17 @@ public class FetchService {
             throw new BatchException("최근 커밋이 없습니다.");
         }
 
+        LocalDateTime commitTimeInSeoul = commit.getCommitTime()
+                .atZone(ZoneId.of("UTC"))
+                .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                .toLocalDateTime();
+
         return SlackMessage.createCommitAlertMessage(
                 commit.getUser().getName(),
                 commit.getCommitMsg(),
                 commit.getProject().getName(),
                 count,
-                commit.getCommitTime()
+                commitTimeInSeoul
         );
     }
 }

@@ -26,4 +26,7 @@ public interface CommitRepository extends JpaRepository<Commit, Long>{
 
     @Query("select c from Commit c where c.commitMsg is null")
     Page<Commit> findCommitMsgIsNull(Pageable pageable);
+
+    @Query("select c from Commit c where c.id = (select max(cc.id) from Commit cc)")
+    Optional<Commit> findRecentCommit();
 }

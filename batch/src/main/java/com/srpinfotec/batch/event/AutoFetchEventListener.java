@@ -3,7 +3,9 @@ package com.srpinfotec.batch.event;
 import com.srpinfotec.batch.BatchConfig;
 import com.srpinfotec.batch.exception.BatchException;
 import com.srpinfotec.batch.service.FetchService;
+import com.srpinfotec.batch.slack.SlackMessage;
 import com.srpinfotec.batch.web.response.FetchRsDto;
+import com.srpinfotec.core.repository.CommitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
@@ -13,6 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Slf4j
@@ -22,6 +25,7 @@ public class AutoFetchEventListener {
     private final BatchConfig batchConfig;
     private final ApplicationEventPublisher publisher;
     private final FetchService fetchService;
+    private final CommitRepository commitRepository;
 
     @Async("AutoFetchEventExecutor")
     @EventListener
@@ -33,23 +37,33 @@ public class AutoFetchEventListener {
             FetchRsDto result = fetchService.fetchJobExecutionToDto(jobExecution);
 
             Long fetchCount = result.getFetchCount();
-            String fetchStatus = result.getFetchStatus();
-            String lastUpdated = result.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-            publisher.publishEvent(
-                    new SlackEvent(MessageFormat.format(
-                            """
-                                    Commit log 자동 Fetch 성공
-                                    Revision 수 : {0}
-                                    결과 : {1}
-                                    수집 시간 : {2}
-                                    """
-                            , fetchCount.toString(), fetchStatus, lastUpdated)
-                    )
-            );
+            if (fetchCount == 0L) {
+                return;
+            }
+
+            commitRepository.findRecentCommit()
+                    .ifPresent(commit -> {
+                        publisher.publishEvent(
+                                new SlackEvent(
+                                        SlackMessage.createCommitAlertMessage(
+                                                commit.getUser().getName(),
+                                                commit.getCommitMsg(),
+                                                commit.getProject().getName(),
+                                                fetchCount,
+                                                commit.getCommitTime()
+                                        )
+                                )
+                        );
+                    });
         } catch (Exception e) {
             publisher.publishEvent(
-                    new SlackEvent("Commit log 자동 Fetch 실패 : " + e.getMessage())
+                    new SlackEvent(
+                            SlackMessage.createCommitFailureMessage(
+                                    e.getMessage(),
+                                    LocalDateTime.now()
+                            )
+                    )
             );
 
             throw new BatchException("job 실행 에러");

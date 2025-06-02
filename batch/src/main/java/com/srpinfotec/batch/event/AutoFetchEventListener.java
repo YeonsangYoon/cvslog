@@ -5,7 +5,8 @@ import com.srpinfotec.batch.exception.BatchException;
 import com.srpinfotec.batch.service.FetchService;
 import com.srpinfotec.batch.slack.SlackMessage;
 import com.srpinfotec.batch.web.response.FetchRsDto;
-import com.srpinfotec.core.repository.CommitRepository;
+import com.srpinfotec.core.entity.Commit;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
@@ -14,9 +15,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.text.MessageFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class AutoFetchEventListener {
     private final BatchConfig batchConfig;
     private final ApplicationEventPublisher publisher;
     private final FetchService fetchService;
-    private final CommitRepository commitRepository;
+    private final EntityManager entityManager;
 
     @Async("AutoFetchEventExecutor")
     @EventListener
@@ -42,20 +41,23 @@ public class AutoFetchEventListener {
                 return;
             }
 
-            commitRepository.findRecentCommit()
-                    .ifPresent(commit -> {
-                        publisher.publishEvent(
-                                new SlackEvent(
-                                        SlackMessage.createCommitAlertMessage(
-                                                commit.getUser().getName(),
-                                                commit.getCommitMsg(),
-                                                commit.getProject().getName(),
-                                                fetchCount,
-                                                commit.getCommitTime()
-                                        )
-                                )
-                        );
-                    });
+            Commit commit = entityManager.createQuery("select c from Commit c order by c.id desc", Commit.class)
+                    .setMaxResults(1)
+                    .getSingleResult();
+
+            if(commit == null) return;
+
+            SlackEvent slackEvent = new SlackEvent(
+                    SlackMessage.createCommitAlertMessage(
+                            commit.getUser().getName(),
+                            commit.getCommitMsg(),
+                            commit.getProject().getName(),
+                            fetchCount,
+                            commit.getCommitTime()
+                    )
+            );
+
+            publisher.publishEvent(slackEvent);
         } catch (Exception e) {
             publisher.publishEvent(
                     new SlackEvent(

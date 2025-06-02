@@ -28,7 +28,6 @@ public class AutoFetchEventListener {
     private final EntityManager entityManager;
 
     @Async("AutoFetchEventExecutor")
-    @Transactional
     @EventListener
     public void handleFetchEvent(AutoFetchEvent event) {
         log.info("Fetch Event execute");
@@ -43,23 +42,9 @@ public class AutoFetchEventListener {
                 return;
             }
 
-            Commit commit = entityManager.createQuery("select c from Commit c order by c.id desc", Commit.class)
-                    .setMaxResults(1)
-                    .getSingleResult();
-
-            if(commit == null) return;
-
-            SlackEvent slackEvent = new SlackEvent(
-                    SlackMessage.createCommitAlertMessage(
-                            commit.getUser().getName(),
-                            commit.getCommitMsg(),
-                            commit.getProject().getName(),
-                            fetchCount,
-                            commit.getCommitTime()
-                    )
-            );
-
-            publisher.publishEvent(slackEvent);
+            publisher.publishEvent(new SlackEvent(
+                    fetchService.getRecentCommitSlackMessage(fetchCount)
+            ));
         } catch (Exception e) {
             log.error(e.getMessage());
 

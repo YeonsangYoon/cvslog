@@ -1,12 +1,16 @@
 package com.srpinfotec.batch.service;
 
 import com.srpinfotec.batch.BatchConfig;
+import com.srpinfotec.batch.slack.SlackMessage;
 import com.srpinfotec.batch.web.response.FetchRsDto;
 import com.srpinfotec.batch.exception.BatchException;
+import com.srpinfotec.core.entity.Commit;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +20,7 @@ import java.util.List;
 public class FetchService {
     private final JobExplorer jobExplorer;
     private final BatchConfig batchConfig;
+    private final EntityManager entityManager;
 
     public FetchRsDto manualFetch(){
         // 중복 실행 방지
@@ -95,5 +100,24 @@ public class FetchService {
         JobExecution jobExecution = jobExplorer.getLastJobExecution(jobInstance);
 
         return fetchJobExecutionToDto(jobExecution);
+    }
+
+    @Transactional
+    public SlackMessage getRecentCommitSlackMessage(Long count) {
+        Commit commit = entityManager.createQuery("select c from Commit c order by c.id desc", Commit.class)
+                .setMaxResults(1)
+                .getSingleResult();
+
+        if (commit == null) {
+            throw new BatchException("최근 커밋이 없습니다.");
+        }
+
+        return SlackMessage.createCommitAlertMessage(
+                commit.getUser().getName(),
+                commit.getCommitMsg(),
+                commit.getProject().getName(),
+                count,
+                commit.getCommitTime()
+        );
     }
 }

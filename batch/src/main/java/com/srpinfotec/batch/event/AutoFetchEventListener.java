@@ -59,6 +59,8 @@ public class AutoFetchEventListener {
 
             publisher.publishEvent(slackEvent);
         } catch (Exception e) {
+            log.error(e.getMessage());
+
             publisher.publishEvent(
                     new SlackEvent(
                             SlackMessage.createCommitFailureMessage(

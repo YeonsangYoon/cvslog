@@ -1,5 +1,6 @@
 package com.srpinfotec.batch.slack;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SlackMessage {
     private final String username = "cvs bot";
     private final String icon_emoji = ":robot_face:";
@@ -18,6 +20,7 @@ public class SlackMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Block {
         private String type;
         private Text text;
@@ -87,7 +90,7 @@ public class SlackMessage {
         detailBlock.setType("section");
         detailBlock.setFields(List.of(
                 new SlackMessage.Field("mrkdwn", "*Error:*\n" + errorMessage),
-                new SlackMessage.Field("mrkdwn", "*Date:*\n" +  dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                new SlackMessage.Field("mrkdwn", "*Date:*\n" + dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
         ));
 
         slackMessage.setBlocks(List.of(titleBlock, detailBlock));

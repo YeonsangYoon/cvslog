@@ -26,6 +26,8 @@ public class SlackNotifier {
         try {
             String payload = objectMapper.writeValueAsString(message);
 
+            log.info("Slack message payload : {}", payload);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 

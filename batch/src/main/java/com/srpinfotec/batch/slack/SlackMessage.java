@@ -64,12 +64,16 @@ public class SlackMessage {
         detailBlock.setFields(List.of(
                 new SlackMessage.Field("mrkdwn", "*Author:*\n" + author),
                 new SlackMessage.Field("mrkdwn", "*Project:*\n" + projectName),
-                new SlackMessage.Field("mrkdwn", "*Message:*\n" + message),
                 new SlackMessage.Field("mrkdwn", "*File count:*\n" + revisionCount.toString()),
                 new SlackMessage.Field("mrkdwn", "*Date:*\n" + dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
         ));
 
-        slackMessage.setBlocks(List.of(titleBlock, detailBlock));
+        // 메시지 블럭
+        SlackMessage.Block messageBlock = new SlackMessage.Block();
+        messageBlock.setType("section");
+        messageBlock.setText(new SlackMessage.Text("mrkdwn", "*Message:*\n" + message));
+
+        slackMessage.setBlocks(List.of(titleBlock, detailBlock,  messageBlock));
         return slackMessage;
     }
 

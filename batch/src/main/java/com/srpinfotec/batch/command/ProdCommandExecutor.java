@@ -27,25 +27,24 @@ public class ProdCommandExecutor implements CommandExecutor {
     public void execute(String command) throws IOException, InterruptedException {
         log.debug("Execute Bash Command : {}", command);
 
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .redirectErrorStream(true);
+        Process process = createProcess(command);
 
-        if(currentOs() == OsType.LINUX){
-            processBuilder.command("/bin/bash", "-c", command);
-        } else {
-            processBuilder.command("cmd.exe", "/c", command);
-        }
+        try {
+            boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
 
-        Process process = processBuilder.start();
+            if (!finished) {
+                process.destroyForcibly();
+                throw new ShellCommandException("Command timeout after " + COMMAND_TIMEOUT_MINUTE + " minutes");
+            }
 
-        process.getErrorStream().close();
-        process.getInputStream().close();
-        process.getOutputStream().close();
-
-        boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
-        if (!finished ) {
-            process.destroy();
-            throw new ShellCommandException("Bash command failed");
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                throw new ShellCommandException("Command failed with exit code: " + exitCode);
+            }
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly();
+            }
         }
     }
 
@@ -54,38 +53,56 @@ public class ProdCommandExecutor implements CommandExecutor {
         log.debug("Execute Bash Command : {}", command);
 
         List<String> logs = new ArrayList<>();
-
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .redirectErrorStream(true);
-
-        if(currentOs() == OsType.LINUX){
-            processBuilder.command("/bin/bash", "-c", command);
-        } else {
-            processBuilder.command("cmd.exe", "/c", command);
-        }
-
-        Process process = processBuilder.start();
+        Process process = createProcess(command);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 logs.add(line);
+                log.trace("Command output: {}", line);
             }
-        }
 
-        boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
-        if (!finished ) {
-            process.destroy();
-            throw new ShellCommandException("Bash command failed");
+            boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
+
+            if (!finished) {
+                process.destroyForcibly();
+                throw new ShellCommandException("Command timeout after " + COMMAND_TIMEOUT_MINUTE + " minutes");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                throw new ShellCommandException("Command failed with exit code: " + exitCode + ", output: " + logs);
+            }
+
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly();
+            }
         }
 
         return logs;
     }
 
-    private OsType currentOs(){
+    /**
+     * 프로세스 생성 공통 메서드
+     */
+    private Process createProcess(String command) throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder()
+                .redirectErrorStream(true);
+
+        if (currentOs() == OsType.LINUX) {
+            processBuilder.command("/bin/bash", "-c", command);
+        } else {
+            processBuilder.command("cmd.exe", "/c", command);
+        }
+
+        return processBuilder.start();
+    }
+
+    private OsType currentOs() {
         String os = System.getProperty("os.name").toLowerCase();
 
-        if(os.contains("win")){
+        if (os.contains("win")) {
             return OsType.WINDOW;
         } else {
             return OsType.LINUX;

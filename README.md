@@ -1,522 +1,572 @@
-# CVSLog
+# CVSLog: CVS 로그 수집 시스템 구현
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.2-brightgreen)
 ![Spring Batch](https://img.shields.io/badge/Spring%20Batch-5.0-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
 
-CVS(Concurrent Versions System) 커밋 로그를 자동으로 수집하고 관리하는 Spring Boot 기반 멀티모듈 시스템입니다.
+CVS 저장소의 커밋 로그를 자동으로 수집하여 관계형 데이터베이스에 저장하고 REST API로 제공하는 Spring Boot 멀티모듈 시스템입니다.
 
 ## 📋 목차
 
-- [개요](#개요)
-- [주요 기능](#주요-기능)
-- [아키텍처](#아키텍처)
-- [시작하기](#시작하기)
-- [API 문서](#api-문서)
-- [설정](#설정)
-- [배포](#배포)
-- [기여하기](#기여하기)
+- [시스템 아키텍처](#시스템-아키텍처)
+- [핵심 구현 내용](#핵심-구현-내용)
+- [모듈별 구현 세부사항](#모듈별-구현-세부사항)
+- [배치 처리 구현](#배치-처리-구현)
+- [이벤트 기반 처리](#이벤트-기반-처리)
+- [외부 시스템 연동](#외부-시스템-연동)
+- [성능 및 안정성](#성능-및-안정성)
+- [실행 및 배포](#실행-및-배포)
 
-## 🎯 개요
+## 🏗️ 시스템 아키텍처
 
-CVSLog는 레거시 CVS 시스템의 커밋 히스토리를 현대적인 방식으로 관리할 수 있게 해주는 시스템입니다. Spring Batch를 활용하여 대용량 로그 데이터를 효율적으로 처리하고, REST API를 통해 편리한 조회 기능을 제공합니다.
+### 멀티모듈 구조
+```
+cvslog/
+├── core/           # 공통 도메인 모델 및 JPA 엔티티
+├── api/            # REST API 서버 (조회)
+└── batch/          # CVS 로그 수집 및 배치 처리
+```
 
-### ✨ 주요 기능
+### 기술 스택
+- **Backend**: Spring Boot 3.3.2, Spring Batch 5.0, Java 17
+- **Database**: MySQL/MariaDB + Spring Data JPA + QueryDSL
+- **Build**: Gradle 8.0, 멀티모듈 프로젝트
+- **External**: CVS Commands, Slack Webhook API
 
-- 🔄 **자동 로그 수집**: CVS 저장소에서 커밋 로그 자동 수집
-- 📊 **대용량 처리**: Spring Batch 기반 청크 지향 처리
-- 🔍 **검색 및 조회**: 프로젝트별, 사용자별, 기간별 커밋 이력 조회
-- 📱 **실시간 알림**: Slack을 통한 배치 작업 결과 알림
-- 📈 **모니터링**: Prometheus 메트릭을 통한 시스템 모니터링
-- 🌐 **REST API**: 직관적인 RESTful API 제공
+### 실행 환경
+- **API Server**: Port 8080 (조회)
+- **Batch Server**: Port 8082 (배치 처리)
+- **Profile**: local(개발), prod(운영)
 
-## 🏗️ 아키텍처
+## 🔧 핵심 구현 내용
 
-### 전체 시스템 구조
+### 1. 도메인 모델 설계
+
+**엔티티 관계 구조**:
+```mermaid
+erDiagram
+    Project ||--o{ File : "has"
+    Project ||--o{ Commit : "contains"
+    User ||--o{ Commit : "creates"
+    Commit ||--o{ Revision : "includes"
+    File ||--o{ Revision : "has_versions"
+    
+    Project {
+        Long id PK
+        String name
+        String description
+        LocalDateTime createdAt
+        LocalDateTime updatedAt
+    }
+    
+    User {
+        Long id PK
+        String name
+        String email
+        LocalDateTime createdAt
+        LocalDateTime updatedAt
+    }
+    
+    File {
+        Long id PK
+        String path
+        String name
+        Long project_id FK
+        LocalDateTime createdAt
+        LocalDateTime updatedAt
+    }
+    
+    Commit {
+        Long id PK
+        String message
+        LocalDateTime commitTime
+        Long project_id FK
+        Long user_id FK
+        LocalDateTime createdAt
+        LocalDateTime updatedAt
+    }
+    
+    Revision {
+        Long id PK
+        String revisionNumber
+        String revisionType "A/M/R"
+        Long commit_id FK
+        Long file_id FK
+        LocalDateTime createdAt
+        LocalDateTime updatedAt
+    }
+```
+
+**주요 엔티티**:
+- `Project`: CVS 프로젝트 정보
+- `User`: CVS 사용자 정보  
+- `File`: 소스 파일 정보
+- `Commit`: 커밋 정보 (시간, 메시지)
+- `Revision`: 파일별 리비전 정보 (A/M/R)
+
+### 2. Spring Batch 구현
+
+**Job 구성**:
+```java
+// FetchCvsLogBatch.java
+@Bean
+public Job fetchCvsLogJob() {
+    return new JobBuilder("fetchCvsLogJob", jobRepository)
+        .start(fetchLogCommandStep)     // CVS 명령 실행
+        .next(revisionFileToDBStep)     // 로그 파싱 및 저장
+        .next(deleteFetchLogFileStep)   // 임시 파일 정리
+        .build();
+}
+```
+
+**청크 지향 처리**:
+```java
+// RevisionLogFileToDB.java
+@Bean
+public Step revisionFileToDBStep() {
+    return new StepBuilder("RevisionFileToDBStep", jobRepository)
+        .<RevisionLogEntry, Revision>chunk(chunkSize, platformTransactionManager)
+        .reader(itemReader())      // FlatFileItemReader
+        .processor(itemProcessor()) // CompositeItemProcessor
+        .writer(itemWriter())      // JpaItemWriter
+        .build();
+}
+```
+
+### 3. 이벤트 기반 비동기 처리
+
+**이벤트 발행/구독 패턴**:
+```java
+// AutoFetchEventListener.java
+@EventListener
+@Async("AutoFetchEventExecutor")
+public void handleFetchEvent(AutoFetchEvent event) {
+    JobExecution jobExecution = batchConfig.runDailyFetchCvsLog();
+    
+    // 배치 실행 상태 확인
+    if(jobExecution.getStatus().isUnsuccessful()) {
+        throw new BatchException("배치 실행 실패");
+    }
+    
+    // Slack 알림 이벤트 발행
+    publisher.publishEvent(new SlackEvent(slackMessage));
+}
+```
+
+## 📁 모듈별 구현 세부사항
+
+### Core 모듈: 공통 기반
+
+**JPA 엔티티 구현**:
+```java
+@Entity
+@Table(name = "CVS_COMMIT_HISTORY")
+public class Commit extends BaseTime {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+    
+    @OneToMany(mappedBy = "commit", cascade = CascadeType.ALL)
+    private List<Revision> revisions = new ArrayList<>();
+}
+```
+
+**QueryDSL Repository**:
+```java
+@Repository
+public class CommitQueryRepository {
+    private final JPAQueryFactory queryFactory;
+    
+    public Page<Commit> findCommitsWithCondition(CommitRqCond condition) {
+        return PageableExecutionUtils.getPage(
+            queryFactory
+                .selectFrom(commit)
+                .leftJoin(commit.project, project).fetchJoin()
+                .leftJoin(commit.user, user).fetchJoin()
+                .where(buildConditions(condition))
+                .fetch(),
+            pageable,
+            countQuery()
+        );
+    }
+}
+```
+
+### Batch 모듈: 핵심 처리 로직
+
+**CVS 명령어 실행**:
+```java
+@Component
+@Profile("prod")
+public class ProdCommandExecutor implements CommandExecutor {
+    
+    @Override
+    public void execute(String command) throws IOException, InterruptedException {
+        Process process = createProcess(command);
+        
+        try {
+            boolean finished = process.waitFor(COMMAND_TIMEOUT_MINUTE, TimeUnit.MINUTES);
+            
+            if (!finished) {
+                process.destroyForcibly();
+                throw new ShellCommandException("Command timeout");
+            }
+            
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                throw new ShellCommandException("Command failed with exit code: " + exitCode);
+            }
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+}
+```
+
+**로그 파싱 및 변환**:
+```java
+@Component
+public class CvsLogUtil {
+    
+    public RevisionLogEntry parseLogLine(String line) {
+        // CVS 로그 형식: M 2024-07-02 15:30 john.doe myproject src/main.c 1.15
+        String[] parts = line.split("\\s+", 6);
+        
+        return RevisionLogEntry.builder()
+            .revisionType(RevisionType.valueOf(parts[0]))
+            .dateTime(parseDateTime(parts[1] + " " + parts[2]))
+            .userName(parts[3])
+            .projectName(parts[4])
+            .filePath(parts[5])
+            .revisionNumber(parts.length > 6 ? parts[6] : null)
+            .build();
+    }
+}
+```
+
+**중복 체크 Processor**:
+```java
+@Component
+public class DuplicationCheckItemProcessor implements ItemProcessor<RevisionLogEntry, RevisionLogEntry> {
+    
+    @Override
+    public RevisionLogEntry process(RevisionLogEntry item) {
+        // 기존 리비전과 중복 체크
+        boolean exists = revisionRepository.existsByProjectAndFileAndRevisionNumber(
+            item.getProjectName(), 
+            item.getFilePath(), 
+            item.getRevisionNumber()
+        );
+        
+        return exists ? null : item; // null 반환 시 스킵
+    }
+}
+```
+
+### API 모듈: REST API
+
+**컨트롤러 구현**:
+```java
+@RestController
+@RequestMapping("/api/commits")
+public class CommitController {
+    
+    @GetMapping
+    public ResponseEntity<Page<CommitRsDto>> getCommits(
+        @ModelAttribute CommitRqCond condition,
+        Pageable pageable
+    ) {
+        Page<CommitRsDto> commits = commitService.findCommitsWithCondition(condition, pageable);
+        return ResponseEntity.ok(commits);
+    }
+}
+```
+
+## ⚙️ 배치 처리 구현
+
+### 배치 Job 플로우
+
+```mermaid
+flowchart TD
+    A[배치 시작] --> B[Step 1: CVS 명령 실행]
+    B --> C[CVS history 로그 파일 생성]
+    C --> D[Step 2: 로그 파싱 및 저장]
+    D --> E[FlatFileItemReader]
+    E --> F[CompositeItemProcessor]
+    F --> G[JpaItemWriter]
+    G --> H[Step 3: 파일 정리]
+    H --> I[배치 완료]
+    
+    F --> F1[1. 중복 체크]
+    F1 --> F2[2. DTO -> Entity 변환]
+    F2 --> F3[3. 커밋 메시지 조회]
+    
+    subgraph IP [ItemProcessor 체인]
+        F1
+        F2
+        F3
+    end
+    
+    subgraph CP [청크 처리]
+        E
+        F
+        G
+    end
+```
+
+### 배치 실행 전략
+
+```mermaid
+graph LR
+    A[일일 배치] --> A1[청크: 100<br/>메시지 포함]
+    B[월간 배치] --> B1[청크: 10<br/>안정성 우선]
+    C[전체 배치] --> C1[청크: 1000<br/>고속 처리]
+    
+    A1 --> D[CVS rlog 실행]
+    B1 --> D
+    C1 --> E[메시지 제외]
+```
+
+### 핵심 구현 특징
+
+- **3단계 Step**: CVS 명령 → 파싱/저장 → 정리
+- **청크 지향 처리**: 메모리 효율적인 대용량 처리
+- **중복 방지**: 리비전 단위 중복 체크
+- **커밋 메시지**: 개별 파일별 `cvs rlog` 실행
+
+## 🔄 이벤트 기반 처리
+
+### 자동 수집 플로우
+
+```mermaid
+sequenceDiagram
+    participant W as Webhook/CI
+    participant C as BatchController
+    participant E as EventListener
+    participant B as BatchJob
+    participant S as Slack
+    
+    W->>C: POST /fetch/auto
+    C->>C: AutoFetchEvent 발행
+    C-->>W: 즉시 응답
+    
+    Note over E: @Async 비동기 처리
+    E->>B: runDailyFetchCvsLog()
+    B->>E: JobExecution 반환
+    
+    alt 배치 성공
+        E->>S: SlackEvent(성공 메시지)
+    else 배치 실패
+        E->>S: SlackEvent(실패 메시지)
+    end
+```
+
+### Spring Batch 상태 처리
 
 ```mermaid
 graph TD
-    subgraph "외부 저장소"
-        A[CVS Repository]
-        E[(MySQL/MariaDB Database)]
-    end
-
-    subgraph "멀티모듈 Spring Boot"
-        subgraph "Batch App (Port: 8082)"
-            B[Batch Module]
-        end
-        subgraph "API App (Port: 8080)"
-            D[API Module]
-        end
-        subgraph "Core Module (공통)"
-            C[Core Module]
-        end
-    end
-
-    A --> B
-    B --> C
-    D --> C
-    C --> E
-
-    B --> F[Slack Notification]
-    D --> G[Frontend/Client]
-    H[External Webhook] --> B
+    A[JobExecution 반환] --> B{Status 확인}
+    B -->|isUnsuccessful| C[실패 처리]
+    B -->|성공| D[결과 처리]
+    
+    C --> C1[로그 출력]
+    C1 --> C2[BatchException 발생]
+    C2 --> C3[Slack 실패 알림]
+    
+    D --> D1[FetchRsDto 변환]
+    D1 --> D2[최근 커밋 조회]
+    D2 --> D3[Slack 성공 알림]
 ```
 
-### 모듈 의존성 관계
+### 핵심 특징
+
+- **비동기 처리**: `@Async`로 웹훅 응답 즉시 반환
+- **상태 확인**: Spring Batch 특성상 실패해도 JobExecution 반환
+- **이벤트 체인**: AutoFetchEvent → SlackEvent 연쇄 발행
+- **시간대 변환**: UTC → Asia/Seoul 자동 변환
+
+## 🔗 외부 시스템 연동
+
+### CVS 시스템 연동 구조
 
 ```mermaid
-graph LR
-    A[Batch Module] --> C[Core Module]
-    B[API Module] --> C[Core Module]
+graph TD
+    A[Batch System] --> B{Environment}
+    B -->|local| C[LocalCommandExecutor]
+    B -->|prod| D[ProdCommandExecutor]
     
-    C --> D[Spring Data JPA]
-    C --> E[QueryDSL]
+    C --> C1[로그만 출력<br/>실제 실행 X]
+    D --> D1[실제 CVS 명령 실행]
     
-    A --> F[Spring Batch]
-    A --> G[Quartz Scheduler]
-    A --> H[CVS Commands]
+    D1 --> E[CVS Repository]
+    E --> F[cvs history -a -x AMR]
+    F --> G[EUC-KR 로그 파일]
+    G --> H[FlatFileItemReader]
+    H --> I[UTF-8 변환]
+    I --> J[RevisionLogEntry]
     
-    B --> I[Spring Web]
-    B --> J[Spring Actuator]
-    
-    subgraph "외부 시스템"
-        K[CVS Repository]
-        L[(Database)]
-        M[Slack Webhook]
+    subgraph CMD [CVS 명령어]
+        F1[cvs -d CVSROOT history]
+        F2[-a all users]
+        F3[-x AMR Add/Modify/Remove]
+        F4[-D DATE 날짜 필터]
+        F5[output to logfile]
     end
-    
-    H --> K
-    D --> L
-    E --> L
-    A --> M
 ```
 
-### CVS 커밋 이벤트 기반 자동 수집 플로우
+### Slack 연동 플로우
 
 ```mermaid
 sequenceDiagram
-    participant Dev as Developer
-    participant CVS as CVS Repository
-    participant Hook as CVS Hook/CI
-    participant Batch as Batch Module
-    participant DB as Database
-    participant Slack as Slack
+    participant B as Batch
+    participant S as SlackNotifier
+    participant W as Slack Webhook
     
-    Dev->>CVS: git commit & push
-    CVS->>Hook: Commit Event 발생
-    Hook->>Batch: POST /fetch/auto (Webhook)
+    Note over B: 배치 완료 후
+    B->>S: SlackEvent 발행
+    S->>S: SlackMessage 구성
     
-    Note over Batch: AutoFetchEvent 발행
-    Batch->>CVS: cvs history 명령어 실행
-    CVS->>Batch: 로그 데이터 반환
-    Batch->>DB: 파싱된 커밋 데이터 저장
-    Batch->>Slack: 처리 결과 알림
+    alt 성공 메시지
+        S->>W: ✅ 수집 완료<br/>📊 처리 건수<br/>👤 최근 커밋자
+    else 실패 메시지  
+        S->>W: ❌ 배치 실패<br/>💬 에러 메시지<br/>⏰ 실패 시간
+    end
+    
+    W-->>S: HTTP 200 OK
 ```
 
-### 모듈 의존성 관계
+### 핵심 연동 특징
+
+- **환경 분리**: `@Profile`로 로컬/운영 환경 구분
+- **인코딩 변환**: EUC-KR → UTF-8 자동 처리
+- **명령어 구성**: CVS history -a -x AMR (모든 사용자, Add/Modify/Remove)
+- **Slack 알림**: 배치 결과를 구조화된 메시지로 전송
+
+## ⚡ 성능 및 안정성
+
+### 배치 성능 최적화
 
 ```mermaid
-graph LR
-    A[Batch Module] --> C[Core Module]
-    B[API Module] --> C[Core Module]
+graph TD
+    A[배치 유형별 전략] --> B[일일 배치]
+    A --> C[월간 배치]
+    A --> D[전체 배치]
     
-    D[CVS Hook/CI] --> A
-    A --> E[CVS Repository]
-    C --> F[(Database)]
-    A --> G[Slack Webhook]
+    B --> B1[청크: 100<br/>커밋 메시지 포함<br/>정확도 우선]
+    C --> C1[청크: 10<br/>작은 단위 처리<br/>안정성 우선]
+    D --> D1[청크: 1000<br/>메시지 제외<br/>속도 우선]
+    
+    B1 --> E[CVS rlog 실행]
+    C1 --> E
+    D1 --> F[메시지 스킵]
 ```
 
-### Batch 모듈 상세 구조
+### 에러 처리 및 복구
 
 ```mermaid
-graph TB
-    subgraph "Batch Module Architecture"
-        A[REST Controller] --> B[FetchService]
-        B --> C[BatchConfig]
-        C --> D[Spring Batch Jobs]
-        
-        subgraph "배치 작업 플로우"
-            D --> E[Step 1: CVS Command]
-            E --> F[Step 2: Log Parsing & DB Save]
-            F --> G[Step 3: File Cleanup]
-        end
-        
-        subgraph "이벤트 시스템"
-            H[AutoFetchEvent] --> I[AutoFetchEventListener]
-            I --> J[SlackEvent]
-            J --> K[SlackEventListener]
-            K --> L[Slack Webhook]
-        end
-        
-        subgraph "명령어 실행"
-            M[CommandExecutor Interface]
-            N[LocalCommandExecutor]
-            O[ProdCommandExecutor]
-            M --> N
-            M --> O
-        end
-        
-        B --> H
-        E --> M
-        F --> M
+flowchart TD
+    A[프로세스 실행] --> B[타임아웃 체크]
+    B -->|10분 초과| C[destroyForcibly]
+    B -->|정상 완료| D[Exit Code 확인]
+    
+    D -->|exitCode != 0| E[ShellCommandException]
+    D -->|exitCode == 0| F[정상 처리]
+    
+    C --> G[리소스 정리]
+    E --> G
+    F --> H[다음 단계]
+    
+    subgraph SB [Spring Batch 상태 처리]
+        I[JobExecution] --> J{isUnsuccessful}
+        J -->|Yes| K[BatchException]
+        J -->|No| L[정상 진행]
+        K --> M[Slack 실패 알림]
+        L --> N[Slack 성공 알림]
     end
 ```
 
-### 배치 작업 데이터 플로우
+### 리소스 관리
 
 ```mermaid
-sequenceDiagram
-    participant Client
-    participant BatchAPI
-    participant BatchJob
-    participant CVS
-    participant FileSystem
-    participant Database
-    participant Slack
+graph LR
+    A[배치 시작] --> B[임시 로그 파일 생성]
+    B --> C[FlatFileItemReader]
+    C --> D[데이터 처리]
+    D --> E[Step 3 파일 정리]
+    E --> F[rm -f logfile]
+    F --> G[배치 완료]
     
-    Client->>BatchAPI: POST /fetch
-    BatchAPI->>BatchJob: runDailyFetchCvsLog()
-    
-    Note over BatchJob: Step 1: Fetch Command
-    BatchJob->>CVS: cvs history -a -x AMR
-    CVS->>FileSystem: cvs_fetch_{jobId}.log
-    
-    Note over BatchJob: Step 2: Process Log
-    BatchJob->>FileSystem: Read log file
-    BatchJob->>Database: Save Revision entities
-    
-    Note over BatchJob: Step 3: Cleanup
-    BatchJob->>FileSystem: Delete log file
-    
-    BatchJob->>Slack: Send completion notification
-    BatchAPI->>Client: Return FetchRsDto
+    subgraph FL [파일 생명주기]
+        B1[cvs_fetch_ID.log]
+        B2["/tmp/cvs_logs/ 경로"]
+        B3[EUC-KR 인코딩]
+    end
 ```
 
-## 📁 프로젝트 구조
+### 핵심 안정성 특징
 
-### Core Module (공통 기반)
-```
-core/
-├── entity/
-│   ├── BaseTime.java           # 공통 시간 필드
-│   ├── Commit.java            # 커밋 정보
-│   ├── Project.java           # 프로젝트 정보
-│   ├── User.java              # 사용자 정보
-│   ├── Revision.java          # 리비전 정보
-│   └── File.java              # 파일 정보
-├── repository/
-│   ├── CommitRepository.java
-│   ├── ProjectRepository.java
-│   ├── UserRepository.java
-│   ├── RevisionRepository.java
-│   └── FileRepository.java
-├── value/
-│   ├── RevisionType.java      # 리비전 타입 (A/M/R)
-│   └── UseType.java
-└── JpaConfig.java             # JPA 설정
-```
+- **중복 방지**: 리비전 단위 존재 여부 체크
+- **타임아웃 처리**: 10분 제한 + 강제 종료
+- **상태 확인**: Spring Batch JobExecution 상태 체크
+- **파일 정리**: Step 단위 임시 파일 자동 삭제
 
-### Batch Module (핵심 처리 로직)
-```
-batch/
-├── job/                       # 배치 작업 정의
-│   ├── FetchCvsLogBatch.java     # 메인 배치 Job 설정
-│   ├── FetchLogCommand.java      # CVS 명령어 실행 Step
-│   ├── RevisionLogFileToDB.java  # 로그 파싱 및 저장 Step
-│   ├── dto/
-│   │   ├── RevisionLogEntry.java # CVS 로그 엔트리 DTO
-│   │   └── LogBuffer.java
-│   └── mapper/
-│       ├── CvsLogUtil.java       # CVS 로그 파싱 유틸
-│       └── LogToEntityMapper.java # DTO → Entity 매핑
-├── command/                   # 시스템 명령어 실행
-│   ├── CommandExecutor.java      # 명령어 실행 인터페이스
-│   ├── LocalCommandExecutor.java # 로컬 환경용
-│   ├── ProdCommandExecutor.java  # 프로덕션 환경용
-│   └── OsType.java              # OS 타입 구분
-├── event/                     # 이벤트 기반 처리
-│   ├── AutoFetchEvent.java       # 자동 수집 이벤트
-│   ├── AutoFetchEventListener.java
-│   ├── SlackEvent.java           # Slack 알림 이벤트
-│   └── SlackEventListener.java
-├── service/
-│   └── FetchService.java         # 배치 실행 서비스
-├── slack/                     # Slack 통합
-│   ├── SlackNotifier.java
-│   └── SlackMessage.java
-├── web/                       # REST API
-│   ├── BatchController.java      # 배치 실행 API
-│   └── response/FetchRsDto.java
-└── BatchConfig.java           # 배치 설정 및 실행기
+## 🚀 실행 및 배포
+
+### 환경 설정
+
+**필수 환경변수**:
+```bash
+# CVS 연동
+export CVSROOT=:pserver:user@cvs-server:/path/to/repository
+export CVSLOGPATH=/tmp/cvs_logs
+
+# Slack 연동
+export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+
+# 데이터베이스 (운영환경)
+export CL_DB_URL=jdbc:mysql://prod-db:3306/cvslog
+export CL_DB_USERNAME=cvslog_user
+export CL_DB_PASSWORD=your_password
 ```
 
-### API Module (REST API)
-```
-api/
-├── controller/
-│   ├── CommitController.java     # 커밋 조회 API
-│   ├── ConditionController.java  # 검색 조건 API
-│   └── MainController.java       # 메인 페이지 API
-├── service/
-│   ├── CommitService.java
-│   ├── ProjectService.java
-│   ├── RevisionService.java
-│   └── UserService.java
-├── repository/                # 조회용 Repository
-│   ├── CommitQueryRepository.java
-│   ├── ProjectQueryRepository.java
-│   └── UserQueryRepository.java
-└── dto/
-    ├── request/CommitRqCond.java # 검색 조건 DTO
-    └── response/              # 응답 DTO들
-```
-
-## 🔄 배치 작업 세부 사항
-
-### 1. FetchCvsLogJob (커밋 메시지 포함)
-- **청크 사이즈**: 일일(100), 월간(10)
-- **처리 단계**: CVS 명령어 → 로그 파싱 → 커밋 메시지 조회 → DB 저장
-
-### 2. FetchCvsLogJobWithoutCommitMsg (고속 처리)
-- **청크 사이즈**: 1000
-- **처리 단계**: CVS 명령어 → 로그 파싱 → DB 저장 (메시지 제외)
-
-### 3. ItemProcessor 체인
-```text
-CompositeItemProcessor<RevisionLogEntry, Revision>
-├── duplicationCheckItemProcessor    // 중복 체크
-├── dtoToEntityItemProcessor        // DTO → Entity 변환
-└── commitMessageItemProcessor      // 커밋 메시지 조회 (선택적)
-```
-
-## 🚀 시작하기
-
-### 필수 요구사항
-
-- Java 17+
-- MySQL 8.0+ 또는 MariaDB 10.6+
-- CVS 클라이언트 설치
-- Gradle 8.0+
-
-### 설치 및 실행
-
-1. **저장소 클론**
-   ```bash
-   git clone https://github.com/your-org/cvslog.git
-   cd cvslog
-   ```
-
-2. **환경 변수 설정**
-   ```bash
-   export CVSROOT=:pserver:user@cvs-server:/path/to/repository
-   export CVSLOGPATH=/tmp/cvs_logs
-   export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
-   ```
-
-3. **데이터베이스 설정**
-   ```yaml
-   # core/src/main/resources/application-core.yml
-   spring:
-     datasource:
-       url: jdbc:mysql://localhost:3306/cvslog
-       username: your_username
-       password: your_password
-   ```
-
-4. **빌드 및 실행**
-   ```bash
-   # 전체 빌드
-   ./gradlew build
-   
-   # API 서버 실행 (포트: 8080)
-   ./gradlew :api:bootRun
-   
-   # Batch 서버 실행 (포트: 8082)
-   ./gradlew :batch:bootRun
-   ```
-
-## 📚 API 문서
-
-### 배치 관련 API
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `POST` | `/fetch` | 수동 일일 로그 수집 |
-| `POST` | `/fetch/auto` | 웹훅 기반 자동 수집 |
-| `POST` | `/fetch/recent/{month}` | 최근 N개월 로그 수집 |
-| `GET` | `/fetch` | 최근 배치 실행 결과 조회 |
-
-### 조회 API
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `GET` | `/api/commits` | 커밋 목록 조회 |
-| `GET` | `/api/projects` | 프로젝트 목록 조회 |
-| `GET` | `/api/users` | 사용자 목록 조회 |
-| `GET` | `/api/conditions` | 검색 조건 조회 |
-
-### 예시 요청
+### 빌드 및 실행
 
 ```bash
-# 일일 로그 수집
+# 전체 빌드
+./gradlew build
+
+# API 서버 실행 (포트: 8080)
+./gradlew :api:bootRun
+
+# Batch 서버 실행 (포트: 8082)
+./gradlew :batch:bootRun --args='--spring.profiles.active=prod'
+```
+
+### API 사용 예시
+
+```bash
+# 수동 일일 배치 실행
 curl -X POST http://localhost:8082/fetch
 
+# 웹훅 기반 자동 배치 (CI/CD 연동)
+curl -X POST http://localhost:8082/fetch/auto
+
+# 최근 3개월 배치 실행
+curl -X POST http://localhost:8082/fetch/recent/3
+
 # 커밋 목록 조회
-curl "http://localhost:8080/api/commits?projectName=myproject&startDate=2024-01-01"
+curl "http://localhost:8080/api/commits?projectName=myproject&startDate=2024-01-01&size=20"
 ```
-
-## ⚙️ 설정
-
-### 환경별 설정
-
-#### Local 환경
-```yaml
-spring:
-  profiles:
-    active: local
-  batch:
-    job:
-      enabled: false
-```
-
-#### Production 환경
-```yaml
-spring:
-  profiles:
-    active: prod
-  datasource:
-    hikari:
-      maximum-pool-size: 4
-```
-
-### 배치 작업 설정
-
-```yaml
-# 청크 사이즈 설정
-job:
-  chunk-size:
-    daily: 100
-    monthly: 10
-    full: 1000
-```
-
-## 🐳 배포
-
-### Docker Compose
-
-```yaml
-version: '3.8'
-services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: cvslog
-    ports:
-      - "3306:3306"
-
-  api:
-    build: 
-      context: .
-      dockerfile: api/Dockerfile
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-
-  batch:
-    build:
-      context: .
-      dockerfile: batch/Dockerfile
-    ports:
-      - "8082:8082"
-    depends_on:
-      - mysql
-```
-
-### Kubernetes
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: cvslog-api
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: cvslog-api
-  template:
-    metadata:
-      labels:
-        app: cvslog-api
-    spec:
-      containers:
-        - name: api
-          image: cvslog/api:latest
-          ports:
-            - containerPort: 8080
-```
-
-## 📊 모니터링
-
-### Prometheus 메트릭
-
-- **HTTP 요청 메트릭**: 응답시간, 에러율
-- **배치 작업 메트릭**: 실행시간, 처리량
-- **데이터베이스 메트릭**: 커넥션 풀, 쿼리 성능
-
-### Slack 알림
-
-배치 작업 완료/실패 시 자동으로 Slack 알림이 전송됩니다:
-
-```
-✅ CVS 로그 수집 완료
-📊 처리된 커밋: 156건
-👤 최근 커밋: john.doe
-📝 메시지: "Fix critical bug in user authentication"
-🏷️ 프로젝트: myproject
-⏰ 시간: 2024-07-02 15:30:25
-```
-
-## 🔧 개발
-
-### 로컬 개발 환경
-
-1. **테스트 실행**
-   ```bash
-   ./gradlew test
-   ```
-
-2. **코드 스타일 검사**
-   ```bash
-   ./gradlew checkstyleMain
-   ```
-
-3. **로컬 프로필로 실행**
-   ```bash
-   ./gradlew :api:bootRun --args='--spring.profiles.active=local'
-   ```
-
-### 기여 가이드
-
-1. Fork 후 브랜치 생성
-2. 기능 개발 또는 버그 수정
-3. 테스트 코드 작성
-4. Pull Request 생성
-
-## 📄 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 있습니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
-
-## 🤝 지원
-
-- **이슈 리포팅**: [GitHub Issues](https://github.com/your-org/cvslog/issues)
-- **기능 요청**: [GitHub Discussions](https://github.com/your-org/cvslog/discussions)
-- **문서**: [Wiki](https://github.com/your-org/cvslog/wiki)
 
 ---
 
-Made with ❤️ by [Your Organization](https://github.com/your-org)
+이 시스템은 레거시 CVS를 현대적인 Spring Boot 생태계로 연결하여, 대용량 로그 데이터를 안정적으로 처리하고 편리한 조회 인터페이스를 제공합니다. Spring Batch의 청크 지향 처리와 이벤트 기반 비동기 처리를 통해 성능과 안정성을 모두 확보했습니다.

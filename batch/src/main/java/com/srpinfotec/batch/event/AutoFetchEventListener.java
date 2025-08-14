@@ -25,7 +25,6 @@ public class AutoFetchEventListener {
     private final BatchConfig batchConfig;
     private final ApplicationEventPublisher publisher;
     private final FetchService fetchService;
-    private final EntityManager entityManager;
 
     @Async("AutoFetchEventExecutor")
     @EventListener
@@ -34,6 +33,15 @@ public class AutoFetchEventListener {
 
         try {
             JobExecution jobExecution = batchConfig.runDailyFetchCvsLog();
+
+            if(jobExecution.getStatus().isUnsuccessful()) {
+                log.error("배치 실행 실패 - Status: {}, ExitCode: {}", 
+                    jobExecution.getStatus(), 
+                    jobExecution.getExitStatus().getExitCode());
+
+                throw new BatchException("Auto Fetch 실패: " + jobExecution.getExitStatus().getExitDescription());
+            }
+
             FetchRsDto result = fetchService.fetchJobExecutionToDto(jobExecution);
 
             Long fetchCount = result.getFetchCount();
